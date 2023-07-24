@@ -1,12 +1,12 @@
 import './App.css'
-import { useEffect } from 'react'
-import * as THREE from 'three'
+import { useEffect, useState } from 'react';
+import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import * as dat from 'dat.gui';
 import SceneInit from './lib/SceneInit';
 
 const App = () => {
+	const [loaded, setLoaded] = useState(false);
+
 	useEffect(() => {
 		const init = new SceneInit('threejs');
 		init.initialize();
@@ -24,9 +24,12 @@ const App = () => {
 		});
 
 		//textures
-		const textureLoader = new THREE.TextureLoader();
+		const loadingManager = new THREE.LoadingManager();
+		const textureLoader = new THREE.TextureLoader(loadingManager);
 		const grid = textureLoader.load('src/assets/grid.png');
 		grid.minFilter = THREE.LinearFilter;
+
+		// loadingManager.onLoad = () => setLoaded(true);
 
 		//environment
 		const environment = new THREE.Group();
@@ -93,7 +96,7 @@ const App = () => {
 			rangeZ: 10,
 		};
 
-		gui.add(params, 'start');
+		// gui.add(params, 'start');
 		gui.add(params, 'gameDuration').min(10).max(300).step(1);
 		gui.add(params, 'spawnRate').min(0.5).max(5).step(0.1);
 		gui.add(params, 'despawnRate').min(0.1).max(2).step(0.1);
@@ -211,6 +214,7 @@ const App = () => {
 
 	return (
 		<div>
+			{/* {loaded && <div>loading</div>} */}
 			<canvas id="threejs" />
 		</div>
 	);
