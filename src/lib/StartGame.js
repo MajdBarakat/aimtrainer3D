@@ -1,34 +1,35 @@
+import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-const StartGame = (init) => {
-	console.log('started');
+const params = {
+	// start: startGame,
+	gameDuration: 5,
+	spawnRate: 2,
+	despawnRate: 0.3,
+	rangeX: 10,
+	rangeY: 10,
+	rangeZ: 10,
+};
 
+let started = true;
+let currentIntersect = null;
+let objects = [];
+let despawnStack = [];
+
+let hits = 0;
+let misses = 0;
+let whiffs = 0;
+let accuracy = null;
+
+let targetsLeft = Math.floor(params.gameDuration * params.spawnRate);
+let spawnInterval = params.gameDuration / targetsLeft;
+let nextSpawn = params.gameDuration;
+
+const StartGame = (init) => {
 	const { scene, camera, canvas, clock } = init;
 
 	clock.start();
 	//game;
-	const params = {
-		// start: startGame,
-		gameDuration: 5,
-		spawnRate: 2,
-		despawnRate: 0.5,
-		rangeX: 10,
-		rangeY: 10,
-		rangeZ: 10,
-	};
-
-	let started = true;
-	let currentIntersect = null;
-	let objects = [];
-
-	let hits = 0;
-	let misses = 0;
-	let whiffs = 0;
-	let accuracy = null;
-
-	let targetsLeft = Math.floor(params.gameDuration * params.spawnRate);
-	let interval = params.gameDuration / targetsLeft;
-	let lastSpawn = params.gameDuration + interval;
 
 	//raycaster
 	const raycaster = new THREE.Raycaster();
@@ -51,6 +52,7 @@ const StartGame = (init) => {
 				),
 				1
 			);
+			hits++;
 		} else if (started && !currentIntersect) whiffs++;
 	});
 
@@ -68,17 +70,18 @@ const StartGame = (init) => {
 
 		// timer.innerHTML = `${timeLeft}`;
 
-		console.log(
-			timeLeft,
-			(lastSpawn - interval).toFixed(2),
-			started,
-			interval,
-			targetsLeft
-		);
+		// console.log(
+		// 	timeLeft,
+		// 	nextSpawn.toFixed(2),
+		// 	started,
+		// 	spawnInterval,
+		// 	targetsLeft,
+		// 	despawnStack[0]?.despawnTime
+		// );
 
-		if (started && timeLeft <= (lastSpawn - interval).toFixed(2)) {
-			lastSpawn = timeLeft;
-			console.log(scene);
+		//spawn ball
+		if (started && timeLeft <= nextSpawn.toFixed(2)) {
+			nextSpawn = timeLeft - spawnInterval;
 			const object = new THREE.Mesh(
 				new THREE.SphereGeometry(0.5, 16, 16),
 				new THREE.MeshBasicMaterial({ color: '#ff0000' })
@@ -91,30 +94,48 @@ const StartGame = (init) => {
 			scene.add(object);
 			objects.push(object);
 
+			const despawnTime = timeLeft - 1 / params.despawnRate;
+			const despawnObj = {
+				uuid: object.uuid,
+				despawnTime,
+			};
+			despawnStack.push(despawnObj);
+
 			targetsLeft--;
 
-			setTimeout(() => {
-				const index = objects.findIndex(
-					(obj) => obj.uuid == object.uuid
-				);
-				if (index > -1) {
-					scene.remove(object);
-					objects.splice(
-						objects.findIndex((obj) => obj.uuid == object.uuid),
-						1
-					);
-					misses++;
-				} else {
-					hits++;
-				}
-			}, 1000 / params.despawnRate);
+			// setTimeout(() => {
+			// 	const index = objects.findIndex(
+			// 		(obj) => obj.uuid == object.uuid
+			// 	);
+			// 	if (index > -1) {
+			// 		scene.remove(object);
+			// 		objects.splice(
+			// 			objects.findIndex((obj) => obj.uuid == object.uuid),
+			// 			1
+			// 		);
+			// 		misses++;
+			// 	} else {
+			// 		hits++;
+			// 	}
+			// }, 1000 / params.despawnRate);
 		}
 
-		// if (timeLeft <= 0) timer.innerHTML = '0.00';
+		//despawn ball
+		if (despawnStack.length && timeLeft <= despawnStack[0].despawnTime) {
+			const { uuid } = despawnStack[0];
+			const index = objects.findIndex((obj) => obj.uuid == uuid);
+			if (index > -1) {
+				scene.remove(objects[index]);
+				objects.splice(index, 1);
+				misses++;
+			}
+			despawnStack.shift();
+		}
 
+		//end of game
 		if (accuracy === null && timeLeft <= 0 - 1 / params.despawnRate) {
+			// if (timeLeft <= 0) timer.innerHTML = '0.00';
 			clock.stop();
-			started = false;
 			accuracy = (hits / (hits + whiffs + misses)) * 100;
 			console.log('game over!');
 			console.log(`You've hit ${hits} Targets!`);
@@ -150,4 +171,18 @@ const StartGame = (init) => {
 	tick();
 };
 
-export default StartGame;
+const GetGameInfo = () => {
+	return {
+		objects,
+		despawnStack,
+		hits,
+		misses,
+		whiffs,
+		accuracy,
+		targetsLeft,
+		spawnInterval,
+		nextSpawn,
+	};
+};
+
+export { StartGame, GetGameInfo };

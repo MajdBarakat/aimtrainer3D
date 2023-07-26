@@ -3,12 +3,15 @@ import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import SceneInit from './lib/SceneInit';
-import StartGame from './lib/StartGame';
+import { StartGame, GetGameInfo } from './lib/StartGame';
 import StartScreen from './pages/startScreen';
+import PauseScreen from './pages/pauseScreen';
 
 const App = () => {
 	const [loaded, setLoaded] = useState(false);
 	const [currentScreen, setCurrentScreen] = useState('start');
+	const [sceneInit, setSceneInit] = useState();
+	const [gameInfo, setGameInfo] = useState();
 
 	let init;
 
@@ -16,6 +19,7 @@ const App = () => {
 		init = new SceneInit('threejs');
 		init.initialize();
 		init.animate();
+		setSceneInit(init);
 
 		const { scene, camera, canvas, clock } = init;
 
@@ -23,9 +27,16 @@ const App = () => {
 		//controls
 		const controls = new PointerLockControls(camera, canvas);
 
-		canvas.addEventListener('click', function () {
+		canvas.addEventListener('click', () => {
 			controls.lock();
-			// console.log('locked');
+		});
+
+		controls.addEventListener('lock', () => {});
+
+		controls.addEventListener('unlock', () => {
+			setCurrentScreen('pause');
+			console.log(GetGameInfo());
+			clock.stop();
 		});
 
 		//textures
@@ -70,7 +81,15 @@ const App = () => {
 				<StartScreen
 					onStart={() => {
 						setCurrentScreen(null);
-						StartGame(init);
+						StartGame(sceneInit);
+					}}
+				/>
+			)}
+			{currentScreen === 'pause' && (
+				<PauseScreen
+					onContinue={() => {
+						setCurrentScreen(null);
+						StartGame(sceneInit);
 					}}
 				/>
 			)}

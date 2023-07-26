@@ -1,7 +1,7 @@
 const StartScreen = ({ onStart, settings, help }) => {
 	return (
 		<div className="flex flex-col justify-center items-center w-screen h-screen absolute bg-black/75">
-			<h1 className="text-6xl mb-24">
+			<h1 className="text-6xl mb-24 -mt-24">
 				AIMTRAINER<span className="text-[5rem] font-bold">3D</span>
 			</h1>
 			<div className="flex flex-col gap-1 text-4xl">
