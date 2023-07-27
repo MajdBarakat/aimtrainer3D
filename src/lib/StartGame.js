@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 
 const params = {
 	// start: startGame,
 	gameDuration: 5,
 	spawnRate: 2,
-	despawnRate: 0.3,
+	despawnRate: 0.5,
 	rangeX: 10,
 	rangeY: 10,
 	rangeZ: 10,
@@ -25,22 +24,22 @@ let targetsLeft = Math.floor(params.gameDuration * params.spawnRate);
 let spawnInterval = params.gameDuration / targetsLeft;
 let nextSpawn = params.gameDuration;
 
-const StartGame = (init) => {
+let lastRecordedElapsedTime = 0;
+let elapsedTime = 0;
+
+let isGameRunning = true;
+
+const StartGame = (init, pausedGameInfo) => {
 	const { scene, camera, canvas, clock } = init;
+
+	lastRecordedElapsedTime = pausedGameInfo?.lastElapsedTime || 0;
+	console.log(lastRecordedElapsedTime);
 
 	clock.start();
 	//game;
 
 	//raycaster
 	const raycaster = new THREE.Raycaster();
-
-	// gui.add(params, 'start');
-	// gui.add(params, 'gameDuration').min(10).max(300).step(1);
-	// gui.add(params, 'spawnRate').min(0.5).max(5).step(0.1);
-	// gui.add(params, 'despawnRate').min(0.1).max(2).step(0.1);
-	// gui.add(params, 'rangeX').min(1).max(15).step(0.1);
-	// gui.add(params, 'rangeY').min(1).max(15).step(0.1);
-	// gui.add(params, 'rangeZ').min(1).max(15).step(0.1);
 
 	//shooting mechanic
 	canvas.addEventListener('click', (e) => {
@@ -58,7 +57,7 @@ const StartGame = (init) => {
 
 	//animate
 	const tick = () => {
-		const elapsedTime = clock.getElapsedTime();
+		elapsedTime = clock.getElapsedTime() + lastRecordedElapsedTime;
 		const timeLeft = (params.gameDuration - elapsedTime).toFixed(2);
 
 		const cameraPosition = new THREE.Vector3();
@@ -70,14 +69,14 @@ const StartGame = (init) => {
 
 		// timer.innerHTML = `${timeLeft}`;
 
-		// console.log(
-		// 	timeLeft,
-		// 	nextSpawn.toFixed(2),
-		// 	started,
-		// 	spawnInterval,
-		// 	targetsLeft,
-		// 	despawnStack[0]?.despawnTime
-		// );
+		console.log(
+			timeLeft,
+			nextSpawn.toFixed(2),
+			started,
+			spawnInterval,
+			targetsLeft,
+			despawnStack[0]?.despawnTime
+		);
 
 		//spawn ball
 		if (started && timeLeft <= nextSpawn.toFixed(2)) {
@@ -102,25 +101,9 @@ const StartGame = (init) => {
 			despawnStack.push(despawnObj);
 
 			targetsLeft--;
-
-			// setTimeout(() => {
-			// 	const index = objects.findIndex(
-			// 		(obj) => obj.uuid == object.uuid
-			// 	);
-			// 	if (index > -1) {
-			// 		scene.remove(object);
-			// 		objects.splice(
-			// 			objects.findIndex((obj) => obj.uuid == object.uuid),
-			// 			1
-			// 		);
-			// 		misses++;
-			// 	} else {
-			// 		hits++;
-			// 	}
-			// }, 1000 / params.despawnRate);
 		}
 
-		//despawn ball
+		// despawn ball
 		if (despawnStack.length && timeLeft <= despawnStack[0].despawnTime) {
 			const { uuid } = despawnStack[0];
 			const index = objects.findIndex((obj) => obj.uuid == uuid);
@@ -137,6 +120,7 @@ const StartGame = (init) => {
 			// if (timeLeft <= 0) timer.innerHTML = '0.00';
 			clock.stop();
 			accuracy = (hits / (hits + whiffs + misses)) * 100;
+			objects?.forEach((obj) => scene.remove(obj));
 			console.log('game over!');
 			console.log(`You've hit ${hits} Targets!`);
 			console.log(`You've missed ${misses} Targets!`);
@@ -168,10 +152,12 @@ const StartGame = (init) => {
 		window.requestAnimationFrame(tick);
 	};
 
-	tick();
+	if (isGameRunning) tick();
 };
 
 const GetGameInfo = () => {
+	const lastElapsedTime = elapsedTime;
+	isGameRunning = false;
 	return {
 		objects,
 		despawnStack,
@@ -182,6 +168,7 @@ const GetGameInfo = () => {
 		targetsLeft,
 		spawnInterval,
 		nextSpawn,
+		lastElapsedTime,
 	};
 };
 

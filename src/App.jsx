@@ -34,9 +34,9 @@ const App = () => {
 		controls.addEventListener('lock', () => {});
 
 		controls.addEventListener('unlock', () => {
-			setCurrentScreen('pause');
-			console.log(GetGameInfo());
 			clock.stop();
+			setCurrentScreen('pause');
+			setGameInfo(GetGameInfo());
 		});
 
 		//textures
@@ -74,22 +74,39 @@ const App = () => {
 		environment.add(floor);
 	}, []);
 
+	const countdown = async () => {
+		return new Promise((resolve) => {
+			let seconds = 3;
+			console.log(seconds);
+			const timer = setInterval(() => {
+				seconds--;
+				console.log(seconds);
+				if (seconds === 0) {
+					clearInterval(timer);
+					resolve('resolved');
+				}
+			}, 1000);
+		});
+	};
+
 	return (
 		<div>
 			{/* {loaded && <div>loading</div>} */}
 			{currentScreen === 'start' && (
 				<StartScreen
-					onStart={() => {
+					onStart={async () => {
 						setCurrentScreen(null);
-						StartGame(sceneInit);
+						await countdown();
+						StartGame(sceneInit, setGameInfo);
 					}}
 				/>
 			)}
 			{currentScreen === 'pause' && (
 				<PauseScreen
-					onContinue={() => {
+					onContinue={async () => {
 						setCurrentScreen(null);
-						StartGame(sceneInit);
+						await countdown();
+						StartGame(sceneInit, gameInfo);
 					}}
 				/>
 			)}
