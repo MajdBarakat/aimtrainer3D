@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import cloneDeep from 'lodash/cloneDeep';
 
 const params = {
 	// start: startGame,
@@ -10,30 +11,29 @@ const params = {
 	rangeZ: 10,
 };
 
-let started = true;
 let currentIntersect = null;
-let objects = [];
-let despawnStack = [];
-
 let hits = 0;
 let misses = 0;
 let whiffs = 0;
 let accuracy = null;
-
-let targetsLeft = Math.floor(params.gameDuration * params.spawnRate);
-let spawnInterval = params.gameDuration / targetsLeft;
-let nextSpawn = params.gameDuration;
-
-let lastRecordedElapsedTime = 0;
 let elapsedTime = 0;
 
-let isGameRunning = true;
+let objects = [];
+let despawnStack = [];
+const spawnInterval =
+	params.gameDuration / Math.floor(params.gameDuration * params.spawnRate);
 
-const StartGame = (init, pausedGameInfo) => {
+const StartGame = (init, gameInfo, setGameInfo, f) => {
 	const { scene, camera, canvas, clock } = init;
+	const gameInfoClone = cloneDeep(gameInfo);
 
-	lastRecordedElapsedTime = pausedGameInfo?.lastElapsedTime || 0;
-	console.log(lastRecordedElapsedTime);
+	gameInfoClone.targetsLeft =
+		gameInfoClone.targetsLeft ||
+		Math.floor(params.gameDuration * params.spawnRate);
+	gameInfoClone.nextSpawn = gameInfoClone.nextSpawn || params.gameDuration;
+
+	// lastRecordedElapsedTime = gameInfo?.lastElapsedTime || 0;
+	// console.log(lastRecordedElapsedTime);
 
 	clock.start();
 	//game;
@@ -43,7 +43,7 @@ const StartGame = (init, pausedGameInfo) => {
 
 	//shooting mechanic
 	canvas.addEventListener('click', (e) => {
-		if (currentIntersect) {
+		if (gameInfoClone.started && currentIntersect) {
 			scene.remove(currentIntersect.object);
 			objects.splice(
 				objects.findIndex(
@@ -52,13 +52,17 @@ const StartGame = (init, pausedGameInfo) => {
 				1
 			);
 			hits++;
-		} else if (started && !currentIntersect) whiffs++;
+		} else if (gameInfoClone.started && !currentIntersect) whiffs++;
 	});
 
 	//animate
 	const tick = () => {
-		elapsedTime = clock.getElapsedTime() + lastRecordedElapsedTime;
-		const timeLeft = (params.gameDuration - elapsedTime).toFixed(2);
+		f(gameInfoClone.timeLeft);
+		// console.log(clock.running);
+		elapsedTime =
+			clock.getElapsedTime() + gameInfoClone.lastRecordedElapsedTime;
+
+		gameInfoClone.timeLeft = (params.gameDuration - elapsedTime).toFixed(2);
 
 		const cameraPosition = new THREE.Vector3();
 		const cameraDirection = new THREE.Vector3();
@@ -66,21 +70,24 @@ const StartGame = (init, pausedGameInfo) => {
 		camera.getWorldDirection(cameraDirection);
 
 		raycaster.set(cameraPosition, cameraDirection);
+		// timer.innerHTML = `${gameInfoClone.timeLeft}`;
 
-		// timer.innerHTML = `${timeLeft}`;
-
-		console.log(
-			timeLeft,
-			nextSpawn.toFixed(2),
-			started,
-			spawnInterval,
-			targetsLeft,
-			despawnStack[0]?.despawnTime
-		);
+		// console.log(
+		// 	gameInfoClone.timeLeft,
+		// 	gameInfoClone.nextSpawn.toFixed(2),
+		// 	gameInfoClone.started,
+		// 	spawnInterval,
+		// 	gameInfoClone.targetsLeft,
+		// 	despawnStack[0]?.despawnTime
+		// 	despawnStack
+		// );
 
 		//spawn ball
-		if (started && timeLeft <= nextSpawn.toFixed(2)) {
-			nextSpawn = timeLeft - spawnInterval;
+		if (
+			gameInfoClone.started &&
+			gameInfoClone.timeLeft <= gameInfoClone.nextSpawn.toFixed(2)
+		) {
+			gameInfoClone.nextSpawn = gameInfoClone.timeLeft - spawnInterval;
 			const object = new THREE.Mesh(
 				new THREE.SphereGeometry(0.5, 16, 16),
 				new THREE.MeshBasicMaterial({ color: '#ff0000' })
@@ -93,20 +100,23 @@ const StartGame = (init, pausedGameInfo) => {
 			scene.add(object);
 			objects.push(object);
 
-			const despawnTime = timeLeft - 1 / params.despawnRate;
+			const despawnTime = gameInfoClone.timeLeft - 1 / params.despawnRate;
 			const despawnObj = {
 				uuid: object.uuid,
 				despawnTime,
 			};
 			despawnStack.push(despawnObj);
-
-			targetsLeft--;
+			gameInfoClone.targetsLeft--;
 		}
 
 		// despawn ball
-		if (despawnStack.length && timeLeft <= despawnStack[0].despawnTime) {
+		if (
+			despawnStack.length &&
+			gameInfoClone.timeLeft <= despawnStack[0].despawnTime
+		) {
 			const { uuid } = despawnStack[0];
 			const index = objects.findIndex((obj) => obj.uuid == uuid);
+			// console.log(gameInfoClone.timeLeft, index);
 			if (index > -1) {
 				scene.remove(objects[index]);
 				objects.splice(index, 1);
@@ -116,8 +126,11 @@ const StartGame = (init, pausedGameInfo) => {
 		}
 
 		//end of game
-		if (accuracy === null && timeLeft <= 0 - 1 / params.despawnRate) {
-			// if (timeLeft <= 0) timer.innerHTML = '0.00';
+		if (
+			accuracy === null &&
+			gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate
+		) {
+			// if (gameInfoClone.timeLeft <= 0) timer.innerHTML = '0.00';
 			clock.stop();
 			accuracy = (hits / (hits + whiffs + misses)) * 100;
 			objects?.forEach((obj) => scene.remove(obj));
@@ -129,7 +142,9 @@ const StartGame = (init, pausedGameInfo) => {
 			return hits, misses, whiffs;
 		}
 
-		if (targetsLeft === 0 && started) started = false;
+		if (gameInfoClone.targetsLeft === 0 && gameInfoClone.started) {
+			gameInfoClone.started = false;
+		}
 
 		const intersects = raycaster.intersectObjects(objects);
 
@@ -147,29 +162,16 @@ const StartGame = (init, pausedGameInfo) => {
 
 		objects.forEach((obj) => obj.material.color.set(0xff0000));
 		intersects.forEach((obj) => obj.object.material.color.set(0x00ff00));
+		// console.log(gameInfoClone.targetsLeft);
 
 		// Call tick again on the next frame
-		window.requestAnimationFrame(tick);
+		if (clock.running) {
+			setGameInfo(gameInfoClone);
+			window.requestAnimationFrame(tick);
+		}
 	};
 
-	if (isGameRunning) tick();
+	tick();
 };
 
-const GetGameInfo = () => {
-	const lastElapsedTime = elapsedTime;
-	isGameRunning = false;
-	return {
-		objects,
-		despawnStack,
-		hits,
-		misses,
-		whiffs,
-		accuracy,
-		targetsLeft,
-		spawnInterval,
-		nextSpawn,
-		lastElapsedTime,
-	};
-};
-
-export { StartGame, GetGameInfo };
+export default StartGame;

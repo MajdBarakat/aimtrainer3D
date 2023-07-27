@@ -1,37 +1,37 @@
 @font-face {
-  font-family: 'Kanit';
-  src: url( 'assets/fonts/Kanit-Light.ttf');
-  font-weight: 200;
+	font-family: 'Kanit';
+	src: url('assets/fonts/Kanit-Light.ttf');
+	font-weight: 200;
 }
 @font-face {
-  font-family: 'Kanit';
-  src: url( 'assets/fonts/Kanit-Regular.ttf');
-  font-weight: 300;
+	font-family: 'Kanit';
+	src: url('assets/fonts/Kanit-Regular.ttf');
+	font-weight: 300;
 }
 @font-face {
-  font-family: 'Kanit';
-  src: url( 'assets/fonts/Kanit-Medium.ttf');
-  font-weight: 400;
+	font-family: 'Kanit';
+	src: url('assets/fonts/Kanit-Medium.ttf');
+	font-weight: 400;
 }
 @font-face {
-  font-family: 'Kanit';
-  src: url( 'assets/fonts/Kanit-SemiBold.ttf');
-  font-weight: 500;
+	font-family: 'Kanit';
+	src: url('assets/fonts/Kanit-SemiBold.ttf');
+	font-weight: 500;
 }
 @font-face {
-  font-family: 'Kanit';
-  src: url( 'assets/fonts/Kanit-Bold.ttf');
-  font-weight: 600;
+	font-family: 'Kanit';
+	src: url('assets/fonts/Kanit-Bold.ttf');
+	font-weight: 600;
 }
 @font-face {
-  font-family: 'Kanit';
-  src: url( 'assets/fonts/Kanit-Black.ttf');
-  font-weight: 900;
+	font-family: 'Kanit';
+	src: url('assets/fonts/Kanit-Black.ttf');
+	font-weight: 900;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  font-family: 'Kanit';
-  color: white;
+	margin: 0;
+	padding: 0;
+	font-family: 'Kanit';
+	color: white;
 }

@@ -1,17 +1,26 @@
-import './App.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 import SceneInit from './lib/SceneInit';
-import { StartGame, GetGameInfo } from './lib/StartGame';
+import StartGame from './lib/StartGame';
 import StartScreen from './pages/startScreen';
 import PauseScreen from './pages/pauseScreen';
+import cloneDeep from 'lodash/cloneDeep';
+import HUD from './pages/hud';
 
 const App = () => {
 	const [loaded, setLoaded] = useState(false);
 	const [currentScreen, setCurrentScreen] = useState('start');
 	const [sceneInit, setSceneInit] = useState();
-	const [gameInfo, setGameInfo] = useState();
+	const [gameInfo, setGameInfo] = useState({
+		started: true,
+		targetsLeft: 0,
+		nextSpawn: 0,
+		lastRecordedElapsedTime: 0,
+		timeLeft: 0,
+		score: { hits: 0, misses: 0, whiffs: 0, accuracy: null },
+	});
+	const [time, setTime] = useState();
 
 	let init;
 
@@ -34,9 +43,14 @@ const App = () => {
 		controls.addEventListener('lock', () => {});
 
 		controls.addEventListener('unlock', () => {
+			setGameInfo((freshState) => {
+				const gameInfoClone = cloneDeep(freshState);
+				gameInfoClone.started = false;
+				gameInfoClone.lastRecordedElapsedTime = clock.getElapsedTime();
+				return gameInfoClone;
+			});
 			clock.stop();
 			setCurrentScreen('pause');
-			setGameInfo(GetGameInfo());
 		});
 
 		//textures
@@ -74,7 +88,7 @@ const App = () => {
 		environment.add(floor);
 	}, []);
 
-	const countdown = async () => {
+	const countdown = () => {
 		return new Promise((resolve) => {
 			let seconds = 3;
 			console.log(seconds);
@@ -89,15 +103,21 @@ const App = () => {
 		});
 	};
 
+	const f = (state) => {
+		console.log(state);
+		setTime(state);
+	};
+
 	return (
 		<div>
 			{/* {loaded && <div>loading</div>} */}
+			{currentScreen === null && <HUD time={time}></HUD>}
 			{currentScreen === 'start' && (
 				<StartScreen
 					onStart={async () => {
 						setCurrentScreen(null);
-						await countdown();
-						StartGame(sceneInit, setGameInfo);
+						// await countdown();
+						StartGame(sceneInit, gameInfo, setGameInfo, f);
 					}}
 				/>
 			)}
@@ -106,7 +126,15 @@ const App = () => {
 					onContinue={async () => {
 						setCurrentScreen(null);
 						await countdown();
-						StartGame(sceneInit, gameInfo);
+						const gameInfoClone = cloneDeep(gameInfo);
+						gameInfo.started = true;
+						setGameInfo(gameInfoClone);
+						StartGame(
+							sceneInit,
+							gameInfo,
+							setGameInfo,
+							setCurrentScreen
+						);
 					}}
 				/>
 			)}
