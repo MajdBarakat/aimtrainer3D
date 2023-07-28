@@ -34,4 +34,17 @@
 	padding: 0;
 	font-family: 'Kanit';
 	color: white;
+	box-sizing: border-box;
 }
+.rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
+	border-color: transparent;
+	box-shadow: none;
+	/* background: #d7d7d7; */
+}
+
+/* .rc-slider-handle:focus-visible,
+.rc-slider-handle:focus,
+.rc-slider-handle-click-focused:focus,
+.rc-slider-handle:hover {
+	background: #d7d7d7;
+} */

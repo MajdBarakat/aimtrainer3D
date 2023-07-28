@@ -12,6 +12,7 @@
   "dependencies": {
     "dat.gui": "^0.7.9",
     "lodash": "^4.17.21",
+    "rc-slider": "^10.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwindcss": "^3.3.3",

@@ -7,6 +7,7 @@ import StartScreen from './pages/startScreen';
 import PauseScreen from './pages/pauseScreen';
 import cloneDeep from 'lodash/cloneDeep';
 import HUD from './pages/hud';
+import SettingsScreen from './pages/settingsScreen';
 
 const App = () => {
 	const [loaded, setLoaded] = useState(false);
@@ -121,8 +122,10 @@ const App = () => {
 							setCurrentScreen
 						);
 					}}
+					onSettings={() => setCurrentScreen('settings')}
 				/>
 			)}
+			{currentScreen === 'settings' && <SettingsScreen />}
 			{currentScreen === 'pause' && (
 				<PauseScreen
 					onContinue={async () => {
