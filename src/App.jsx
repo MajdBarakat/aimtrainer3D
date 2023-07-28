@@ -14,6 +14,7 @@ const App = () => {
 	const [sceneInit, setSceneInit] = useState();
 	const [gameInfo, setGameInfo] = useState({
 		started: true,
+		spawning: true,
 		targetsLeft: 0,
 		nextSpawn: 0,
 		lastRecordedElapsedTime: 0,
@@ -103,11 +104,6 @@ const App = () => {
 		});
 	};
 
-	const f = (state) => {
-		console.log(state);
-		setTime(state);
-	};
-
 	return (
 		<div>
 			{/* {loaded && <div>loading</div>} */}
@@ -117,7 +113,13 @@ const App = () => {
 					onStart={async () => {
 						setCurrentScreen(null);
 						// await countdown();
-						StartGame(sceneInit, gameInfo, setGameInfo, f);
+						StartGame(
+							sceneInit,
+							gameInfo,
+							setGameInfo,
+							setTime,
+							setCurrentScreen
+						);
 					}}
 				/>
 			)}
@@ -133,6 +135,7 @@ const App = () => {
 							sceneInit,
 							gameInfo,
 							setGameInfo,
+							setTime,
 							setCurrentScreen
 						);
 					}}

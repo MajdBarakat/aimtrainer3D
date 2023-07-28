@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import cloneDeep from 'lodash/cloneDeep';
+import { update } from 'lodash';
 
 const params = {
 	// start: startGame,
@@ -23,20 +24,68 @@ let despawnStack = [];
 const spawnInterval =
 	params.gameDuration / Math.floor(params.gameDuration * params.spawnRate);
 
-const StartGame = (init, gameInfo, setGameInfo, f) => {
+const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const { scene, camera, canvas, clock } = init;
 	const gameInfoClone = cloneDeep(gameInfo);
 
-	gameInfoClone.targetsLeft =
-		gameInfoClone.targetsLeft ||
-		Math.floor(params.gameDuration * params.spawnRate);
-	gameInfoClone.nextSpawn = gameInfoClone.nextSpawn || params.gameDuration;
+	const updateObjects = () => {
+		objects = [];
+		scene.children.forEach((obj) => {
+			if (obj.name === 'target') objects.push(obj);
+		});
+		console.log(objects);
+	};
 
-	// lastRecordedElapsedTime = gameInfo?.lastElapsedTime || 0;
-	// console.log(lastRecordedElapsedTime);
+	//spawn ball
+	const spawnBall = () => {
+		gameInfoClone.nextSpawn = gameInfoClone.timeLeft - spawnInterval;
+		const object = new THREE.Mesh(
+			new THREE.SphereGeometry(0.5, 16, 16),
+			new THREE.MeshBasicMaterial({ color: '#ff0000' })
+		);
 
-	clock.start();
-	//game;
+		object.position.x = (Math.random() - 0.5) * params.rangeX;
+		object.position.y = Math.random() * (params.rangeY / 2);
+		object.position.z = -Math.random() * (params.rangeZ / 2);
+		object.name = 'target';
+
+		scene.add(object);
+		updateObjects();
+		setDespawnTime(object);
+		gameInfoClone.targetsLeft--;
+	};
+
+	const setDespawnTime = (object) => {
+		const despawnTime = gameInfoClone.timeLeft - 1 / params.despawnRate;
+		const despawnObj = {
+			uuid: object.uuid,
+			despawnTime,
+		};
+		despawnStack.push(despawnObj);
+	};
+
+	const despawnBall = () => {
+		const { uuid } = despawnStack[0];
+		const index = scene.children.findIndex((obj) => obj.uuid == uuid);
+		if (index > -1) {
+			scene.remove(scene.children[index]);
+			updateObjects();
+			misses++;
+		}
+		despawnStack.shift();
+	};
+
+	const endGame = () => {
+		clock.stop();
+		accuracy = (hits / (hits + whiffs + misses)) * 100;
+		objects?.forEach((obj) => scene.remove(obj));
+		console.log('game over!');
+		console.log(`You've hit ${hits} Targets!`);
+		console.log(`You've missed ${misses} Targets!`);
+		console.log(`You've whiffed ${whiffs} Times!`);
+		console.log(`WOW you have an accuracy of ${accuracy}%!`);
+		return hits, misses, whiffs;
+	};
 
 	//raycaster
 	const raycaster = new THREE.Raycaster();
@@ -45,32 +94,26 @@ const StartGame = (init, gameInfo, setGameInfo, f) => {
 	canvas.addEventListener('click', (e) => {
 		if (gameInfoClone.started && currentIntersect) {
 			scene.remove(currentIntersect.object);
-			objects.splice(
-				objects.findIndex(
-					(obj) => obj.uuid == currentIntersect.object.uuid
-				),
-				1
-			);
+			updateObjects();
 			hits++;
 		} else if (gameInfoClone.started && !currentIntersect) whiffs++;
 	});
 
-	//animate
+	gameInfoClone.targetsLeft =
+		gameInfoClone.targetsLeft ||
+		Math.floor(params.gameDuration * params.spawnRate);
+	gameInfoClone.nextSpawn = gameInfoClone.nextSpawn || params.gameDuration;
+
+	clock.start();
+
+	//game
 	const tick = () => {
-		f(gameInfoClone.timeLeft);
-		// console.log(clock.running);
+		// updateObjects();
+
 		elapsedTime =
 			clock.getElapsedTime() + gameInfoClone.lastRecordedElapsedTime;
 
 		gameInfoClone.timeLeft = (params.gameDuration - elapsedTime).toFixed(2);
-
-		const cameraPosition = new THREE.Vector3();
-		const cameraDirection = new THREE.Vector3();
-		camera.getWorldPosition(cameraPosition);
-		camera.getWorldDirection(cameraDirection);
-
-		raycaster.set(cameraPosition, cameraDirection);
-		// timer.innerHTML = `${gameInfoClone.timeLeft}`;
 
 		// console.log(
 		// 	gameInfoClone.timeLeft,
@@ -78,73 +121,41 @@ const StartGame = (init, gameInfo, setGameInfo, f) => {
 		// 	gameInfoClone.started,
 		// 	spawnInterval,
 		// 	gameInfoClone.targetsLeft,
-		// 	despawnStack[0]?.despawnTime
-		// 	despawnStack
+		// 	objects.length
 		// );
 
-		//spawn ball
 		if (
-			gameInfoClone.started &&
+			clock.running &&
+			gameInfoClone.spawning &&
 			gameInfoClone.timeLeft <= gameInfoClone.nextSpawn.toFixed(2)
-		) {
-			gameInfoClone.nextSpawn = gameInfoClone.timeLeft - spawnInterval;
-			const object = new THREE.Mesh(
-				new THREE.SphereGeometry(0.5, 16, 16),
-				new THREE.MeshBasicMaterial({ color: '#ff0000' })
-			);
-
-			object.position.x = (Math.random() - 0.5) * params.rangeX;
-			object.position.y = Math.random() * (params.rangeY / 2);
-			object.position.z = -Math.random() * (params.rangeZ / 2);
-
-			scene.add(object);
-			objects.push(object);
-
-			const despawnTime = gameInfoClone.timeLeft - 1 / params.despawnRate;
-			const despawnObj = {
-				uuid: object.uuid,
-				despawnTime,
-			};
-			despawnStack.push(despawnObj);
-			gameInfoClone.targetsLeft--;
-		}
+		)
+			spawnBall();
 
 		// despawn ball
 		if (
 			despawnStack.length &&
 			gameInfoClone.timeLeft <= despawnStack[0].despawnTime
-		) {
-			const { uuid } = despawnStack[0];
-			const index = objects.findIndex((obj) => obj.uuid == uuid);
-			// console.log(gameInfoClone.timeLeft, index);
-			if (index > -1) {
-				scene.remove(objects[index]);
-				objects.splice(index, 1);
-				misses++;
-			}
-			despawnStack.shift();
-		}
+		)
+			despawnBall();
 
 		//end of game
 		if (
 			accuracy === null &&
 			gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate
-		) {
-			// if (gameInfoClone.timeLeft <= 0) timer.innerHTML = '0.00';
-			clock.stop();
-			accuracy = (hits / (hits + whiffs + misses)) * 100;
-			objects?.forEach((obj) => scene.remove(obj));
-			console.log('game over!');
-			console.log(`You've hit ${hits} Targets!`);
-			console.log(`You've missed ${misses} Targets!`);
-			console.log(`You've whiffed ${whiffs} Times!`);
-			console.log(`WOW you have an accuracy of ${accuracy}%!`);
-			return hits, misses, whiffs;
-		}
+		)
+			endGame();
 
 		if (gameInfoClone.targetsLeft === 0 && gameInfoClone.started) {
-			gameInfoClone.started = false;
+			gameInfoClone.spawning = false;
 		}
+
+		//object detection
+		const cameraDirection = new THREE.Vector3();
+		const cameraPosition = new THREE.Vector3();
+		camera.getWorldDirection(cameraDirection);
+		camera.getWorldPosition(cameraPosition);
+
+		raycaster.set(cameraPosition, cameraDirection);
 
 		const intersects = raycaster.intersectObjects(objects);
 
@@ -160,10 +171,12 @@ const StartGame = (init, gameInfo, setGameInfo, f) => {
 			}
 		}
 
+		//set hover color
 		objects.forEach((obj) => obj.material.color.set(0xff0000));
 		intersects.forEach((obj) => obj.object.material.color.set(0x00ff00));
-		// console.log(gameInfoClone.targetsLeft);
 
+		//update data
+		setTime(gameInfoClone.timeLeft > 0 ? gameInfoClone.timeLeft : '0.00');
 		// Call tick again on the next frame
 		if (clock.running) {
 			setGameInfo(gameInfoClone);
