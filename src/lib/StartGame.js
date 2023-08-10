@@ -1,22 +1,23 @@
 import * as THREE from 'three';
 import cloneDeep from 'lodash/cloneDeep';
-import { update } from 'lodash';
+
+const getValue = (name) => JSON.parse(window.localStorage.getItem(name)).value;
+
+const fetchedSettings = {
+	spawnRate: getValue('spawnRate'),
+	despawnRate: getValue('despawnRate'),
+	spread: getValue('spread'),
+	sensitivity: getValue('sensitivity'),
+};
 
 const params = {
-	// start: startGame,
-	gameDuration: 5,
-	spawnRate: 2,
-	despawnRate: 0.5,
-	rangeX: 10,
-	rangeY: 10,
-	rangeZ: 10,
+	gameDuration: 10,
+	spawnRate: fetchedSettings.spawnRate || 2,
+	despawnRate: fetchedSettings.despawnRate || 0.5,
+	spread: fetchedSettings.spread || 10,
 };
 
 let currentIntersect = null;
-let hits = 0;
-let misses = 0;
-let whiffs = 0;
-let accuracy = null;
 let elapsedTime = 0;
 
 let objects = [];
@@ -28,12 +29,13 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const { scene, camera, canvas, clock } = init;
 	const gameInfoClone = cloneDeep(gameInfo);
 
+	let { hits, misses, whiffs, accuracy } = gameInfoClone.score;
+
 	const updateObjects = () => {
 		objects = [];
 		scene.children.forEach((obj) => {
 			if (obj.name === 'target') objects.push(obj);
 		});
-		console.log(objects);
 	};
 
 	//spawn ball
@@ -44,9 +46,9 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 			new THREE.MeshBasicMaterial({ color: '#ff0000' })
 		);
 
-		object.position.x = (Math.random() - 0.5) * params.rangeX;
-		object.position.y = Math.random() * (params.rangeY / 2);
-		object.position.z = -Math.random() * (params.rangeZ / 2);
+		object.position.x = (Math.random() - 0.5) * params.spread;
+		object.position.y = Math.random() * (params.spread / 2);
+		object.position.z = -Math.random() * (params.spread / 2);
 		object.name = 'target';
 
 		scene.add(object);
@@ -78,12 +80,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const endGame = () => {
 		clock.stop();
 		accuracy = (hits / (hits + whiffs + misses)) * 100;
-		objects?.forEach((obj) => scene.remove(obj));
-		console.log('game over!');
-		console.log(`You've hit ${hits} Targets!`);
-		console.log(`You've missed ${misses} Targets!`);
-		console.log(`You've whiffed ${whiffs} Times!`);
-		console.log(`WOW you have an accuracy of ${accuracy}%!`);
+		setCurrentScreen('');
 		return hits, misses, whiffs;
 	};
 
@@ -115,14 +112,14 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 		gameInfoClone.timeLeft = (params.gameDuration - elapsedTime).toFixed(2);
 
-		// console.log(
-		// 	gameInfoClone.timeLeft,
-		// 	gameInfoClone.nextSpawn.toFixed(2),
-		// 	gameInfoClone.started,
-		// 	spawnInterval,
-		// 	gameInfoClone.targetsLeft,
-		// 	objects.length
-		// );
+		console.log(
+			gameInfoClone.timeLeft,
+			gameInfoClone.nextSpawn.toFixed(2),
+			gameInfoClone.started,
+			spawnInterval,
+			gameInfoClone.targetsLeft,
+			objects.length
+		);
 
 		if (
 			clock.running &&

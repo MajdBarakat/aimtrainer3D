@@ -13,24 +13,16 @@ const App = () => {
 	const [loaded, setLoaded] = useState(false);
 	const [currentScreen, setCurrentScreen] = useState('start');
 	const [sceneInit, setSceneInit] = useState();
-	const [gameInfo, setGameInfo] = useState({
-		started: true,
-		spawning: true,
-		targetsLeft: 0,
-		nextSpawn: 0,
-		lastRecordedElapsedTime: 0,
-		timeLeft: 0,
-		score: { hits: 0, misses: 0, whiffs: 0, accuracy: null },
-	});
+	const [gameInfo, setGameInfo] = useState();
 	const [time, setTime] = useState();
 
-	let init;
-
 	useEffect(() => {
-		init = new SceneInit('threejs');
+		const init = new SceneInit('threejs');
 		init.initialize();
 		init.animate();
 		setSceneInit(init);
+
+		setGameInfo(initGameInfo());
 
 		const { scene, camera, canvas, clock } = init;
 
@@ -90,13 +82,26 @@ const App = () => {
 		environment.add(floor);
 	}, []);
 
+	function initGameInfo() {
+		const newGameInfo = {
+			started: true,
+			spawning: true,
+			targetsLeft: 0,
+			nextSpawn: 0,
+			lastRecordedElapsedTime: 0,
+			timeLeft: 0,
+			score: { hits: 0, misses: 0, whiffs: 0, accuracy: null },
+		};
+		return newGameInfo;
+	}
+
 	const countdown = () => {
 		return new Promise((resolve) => {
 			let seconds = 3;
-			console.log(seconds);
+			setTime(`Starting in.. ${seconds}`);
 			const timer = setInterval(() => {
 				seconds--;
-				console.log(seconds);
+				setTime(`Starting in.. ${seconds}`);
 				if (seconds === 0) {
 					clearInterval(timer);
 					resolve('resolved');
@@ -105,46 +110,51 @@ const App = () => {
 		});
 	};
 
+	const handleStart = async (isContinuing) => {
+		setCurrentScreen(null);
+		await countdown();
+		if (isContinuing) {
+			const gameInfoClone = cloneDeep(gameInfo);
+			gameInfo.started = true;
+			setGameInfo(gameInfoClone);
+			StartGame(
+				sceneInit,
+				gameInfo,
+				setGameInfo,
+				setTime,
+				setCurrentScreen
+			);
+		} else
+			StartGame(
+				sceneInit,
+				initGameInfo(),
+				setGameInfo,
+				setTime,
+				setCurrentScreen
+			);
+	};
+
 	return (
 		<div>
 			{/* {loaded && <div>loading</div>} */}
 			{currentScreen === null && <HUD time={time}></HUD>}
+			{currentScreen === 'settings' && (
+				<SettingsScreen onLeave={() => setCurrentScreen('start')} />
+			)}
+			{/* {currentScreen === 'score' && <SettingsScreen />} */}
 			{currentScreen === 'start' && (
 				<StartScreen
-					onStart={async () => {
-						setCurrentScreen(null);
-						// await countdown();
-						StartGame(
-							sceneInit,
-							gameInfo,
-							setGameInfo,
-							setTime,
-							setCurrentScreen
-						);
-					}}
+					onStart={async () => await handleStart()}
 					onSettings={() => setCurrentScreen('settings')}
 				/>
 			)}
-			{currentScreen === 'settings' && <SettingsScreen />}
 			{currentScreen === 'pause' && (
 				<PauseScreen
-					onContinue={async () => {
-						setCurrentScreen(null);
-						await countdown();
-						const gameInfoClone = cloneDeep(gameInfo);
-						gameInfo.started = true;
-						setGameInfo(gameInfoClone);
-						StartGame(
-							sceneInit,
-							gameInfo,
-							setGameInfo,
-							setTime,
-							setCurrentScreen
-						);
-					}}
+					onContinue={async () => await handleStart(true)}
+					onRestart={async () => await handleStart()}
+					onMainMenu={() => setCurrentScreen('start')}
 				/>
 			)}
-			{/* {currentScreen === 'settings' && <StartScreen />} */}
 			<canvas id="threejs" />
 		</div>
 	);
