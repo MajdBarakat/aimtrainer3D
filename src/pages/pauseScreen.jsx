@@ -1,4 +1,4 @@
-const PauseScreen = ({ onContinue, onRestart, onSettings, onMainMenu }) => {
+const PauseScreen = ({ onContinue, onRestart, onMainMenu }) => {
 	return (
 		<div className="flex flex-col justify-center items-center w-screen h-screen absolute bg-black/75">
 			<h1 className="text-8xl mb-24 -mt-24">PAUSED</h1>
@@ -15,12 +15,12 @@ const PauseScreen = ({ onContinue, onRestart, onSettings, onMainMenu }) => {
 				>
 					RESTART
 				</button>
-				<button
+				{/* <button
 					className="bg-transparent p-0 font-semibold hover:opacity-75"
 					onClick={onSettings}
 				>
 					SETTINGS
-				</button>
+				</button> */}
 				<button
 					className="bg-transparent p-0 font-semibold hover:opacity-75"
 					onClick={onMainMenu}

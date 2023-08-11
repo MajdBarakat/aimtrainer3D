@@ -10,22 +10,24 @@ const fetchedSettings = {
 	sensitivity: getValue('sensitivity'),
 };
 
-const params = {
-	gameDuration: 10,
-	spawnRate: fetchedSettings.spawnRate || 2,
-	despawnRate: fetchedSettings.despawnRate || 0.5,
-	spread: fetchedSettings.spread || 10,
-};
-
 let currentIntersect = null;
 let elapsedTime = 0;
 
 let objects = [];
 let despawnStack = [];
-const spawnInterval =
-	params.gameDuration / Math.floor(params.gameDuration * params.spawnRate);
 
 const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
+	const params = {
+		gameDuration: 15,
+		spawnRate: fetchedSettings.spawnRate || 2,
+		despawnRate: fetchedSettings.despawnRate || 0.5,
+		spread: fetchedSettings.spread || 10,
+	};
+
+	const spawnInterval =
+		params.gameDuration /
+		Math.floor(params.gameDuration * params.spawnRate);
+
 	const { scene, camera, canvas, clock } = init;
 	const gameInfoClone = cloneDeep(gameInfo);
 
@@ -38,9 +40,13 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		});
 	};
 
+	gameInfoClone.started = true;
+
 	//spawn ball
 	const spawnBall = () => {
-		gameInfoClone.nextSpawn = gameInfoClone.timeLeft - spawnInterval;
+		gameInfoClone.nextSpawn = parseFloat(
+			gameInfoClone.timeLeft - spawnInterval.toFixed(2)
+		);
 		const object = new THREE.Mesh(
 			new THREE.SphereGeometry(0.5, 16, 16),
 			new THREE.MeshBasicMaterial({ color: '#ff0000' })
@@ -77,6 +83,12 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		despawnStack.shift();
 	};
 
+	const clearBalls = () => {
+		scene.children = scene.children.filter((obj) => obj.name != 'target');
+		despawnStack = [];
+		updateObjects();
+	};
+
 	const endGame = () => {
 		clock.stop();
 		accuracy = (hits / (hits + whiffs + misses)) * 100;
@@ -110,21 +122,28 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		elapsedTime =
 			clock.getElapsedTime() + gameInfoClone.lastRecordedElapsedTime;
 
-		gameInfoClone.timeLeft = (params.gameDuration - elapsedTime).toFixed(2);
+		if (elapsedTime === 0) clearBalls();
 
-		console.log(
-			gameInfoClone.timeLeft,
-			gameInfoClone.nextSpawn.toFixed(2),
-			gameInfoClone.started,
-			spawnInterval,
-			gameInfoClone.targetsLeft,
-			objects.length
+		gameInfoClone.timeLeft = parseFloat(
+			(params.gameDuration - elapsedTime).toFixed(2)
 		);
+
+		// console.log(
+		// 	gameInfoClone.timeLeft,
+		// 	gameInfoClone.nextSpawn.toFixed(2),
+		// 	gameInfoClone.started,
+		// 	spawnInterval,
+		// 	gameInfoClone.targetsLeft,
+		// 	objects.length
+		// );
+
+		// console.log(elapsedTime);
+		// console.log(despawnStack);
 
 		if (
 			clock.running &&
 			gameInfoClone.spawning &&
-			gameInfoClone.timeLeft <= gameInfoClone.nextSpawn.toFixed(2)
+			gameInfoClone.timeLeft < gameInfoClone.nextSpawn
 		)
 			spawnBall();
 
@@ -173,7 +192,9 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		intersects.forEach((obj) => obj.object.material.color.set(0x00ff00));
 
 		//update data
-		setTime(gameInfoClone.timeLeft > 0 ? gameInfoClone.timeLeft : '0.00');
+		setTime(
+			gameInfoClone.timeLeft > 0 ? parseFloat(gameInfoClone.timeLeft) : 0
+		);
 		// Call tick again on the next frame
 		if (clock.running) {
 			setGameInfo(gameInfoClone);

@@ -39,12 +39,15 @@ const App = () => {
 		controls.addEventListener('unlock', () => {
 			setGameInfo((freshState) => {
 				const gameInfoClone = cloneDeep(freshState);
-				gameInfoClone.started = false;
-				gameInfoClone.lastRecordedElapsedTime = clock.getElapsedTime();
+				if (gameInfoClone.started) {
+					gameInfoClone.started = false;
+					gameInfoClone.lastRecordedElapsedTime +=
+						clock.getElapsedTime();
+					clock.stop();
+					setCurrentScreen('pause');
+				}
 				return gameInfoClone;
 			});
-			clock.stop();
-			setCurrentScreen('pause');
 		});
 
 		//textures
@@ -84,7 +87,7 @@ const App = () => {
 
 	function initGameInfo() {
 		const newGameInfo = {
-			started: true,
+			started: false,
 			spawning: true,
 			targetsLeft: 0,
 			nextSpawn: 0,
