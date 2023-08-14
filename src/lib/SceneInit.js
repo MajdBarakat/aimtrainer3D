@@ -80,6 +80,17 @@ export default class SceneInit {
 
 	onWindowResize() {
 		this.camera.aspect = window.innerWidth / window.innerHeight;
+		// const distance = 50;
+		// const frustumHeight =
+		// 	2 * distance * Math.tan((this.camera.fov / 2) * (Math.PI / 180));
+		// const frustumWidth = frustumHeight / this.camera.aspect;
+		// const frustumSize = (frustumHeight * frustumWidth * distance) / 3;
+
+		// this.camera.left = (-frustumSize * this.camera.aspect) / 2;
+		// this.camera.right = (frustumSize * this.camera.aspect) / 2;
+		// this.camera.top = frustumSize / 2;
+		// this.camera.bottom = -frustumSize / 2;
+
 		this.camera.updateProjectionMatrix();
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
