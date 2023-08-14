@@ -1,61 +1,12 @@
 import { useEffect, useState } from 'react';
 import Slider from '../components/slider';
 import { cloneDeep } from 'lodash';
+import config from '../config/config.json';
 
 const SettingsScreen = ({ onLeave }) => {
-	const [settings, setSettings] = useState([
-		{
-			id: 'spawnRate',
-			name: 'Spawn Rate',
-			measuredIn: '(/s)',
-			value: 2,
-		},
-		{
-			id: 'despawnRate',
-			name: 'Despawn Rate',
-			measuredIn: '(/s)',
-			value: 0.5,
-		},
-		{
-			id: 'spread',
-			name: 'Spread',
-			measuredIn: '',
-			value: 10,
-		},
-		// {
-		// 	id: 'sensitivity',
-		// 	name: 'Sensitivity',
-		// 	measuredIn: '',
-		// 	value: 0,
-		// },
-	]);
+	const [settings, setSettings] = useState(config.settingsFormat);
 
-	const params = {
-		spawnRate: {
-			id: 'spawnRate',
-			min: 0,
-			max: 3,
-			step: 0.01,
-		},
-		despawnRate: {
-			id: 'despawnRate',
-			min: 0,
-			max: 1.5,
-			step: 0.01,
-		},
-		spread: {
-			id: 'spread',
-			min: 0,
-			max: 15,
-			step: 0.01,
-		},
-		// sensitivity: {
-		// 	id: 'sensitivity',
-		// 	min: 0,
-		// 	max: 5,
-		// 	step: 0.01,
-		// },
-	};
+	const params = config.settingsSliderParamaters;
 
 	useEffect(() => {
 		const fetchedSettings = [];
@@ -66,8 +17,19 @@ const SettingsScreen = ({ onLeave }) => {
 					: undefined
 			)
 		);
-		fetchedSettings[0] !== undefined && setSettings(fetchedSettings);
+		fetchedSettings[0] !== undefined
+			? setSettings(fetchedSettings)
+			: setDefaultValues();
 	}, []);
+
+	const setDefaultValues = () => {
+		const defaultSettings = cloneDeep(settings);
+		defaultSettings.forEach(
+			(setting) =>
+				(setting.value = config.settingsDefaultValues[setting.id])
+		);
+		setSettings(defaultSettings);
+	};
 
 	const handleChange = (id, value) => {
 		const settingsClone = cloneDeep(settings);
@@ -79,9 +41,7 @@ const SettingsScreen = ({ onLeave }) => {
 		);
 	};
 
-	const renderRangeSetting = (param) => {
-		const index = settings.findIndex((setting) => setting.id === param.id);
-		const setting = settings[index];
+	const renderRangeSetting = (param, setting) => {
 		return (
 			<div className="flex flex-row" key={param.id}>
 				<div className="w-1/3">
@@ -107,12 +67,20 @@ const SettingsScreen = ({ onLeave }) => {
 		);
 	};
 
+	const renderTextOptions = () => {};
+
 	return (
 		<div className="flex flex-col justify-center items-center w-screen h-screen absolute bg-black/75">
-			<h1 className="text-8xl mb-24 -mt-24">SETTINGS</h1>
+			<div className="w-5/6">
+				<h1 className="text-7xl -mt-24 font-light">SETTINGS</h1>
+			</div>
+			<div className=" flex flex-col text-4xl w-7/12 items-center">
+				<h2 className="text-6xl ">GAME MODE</h2>
+			</div>
+			<div className=" flex flex-col text-4xl w-7/12 items-center"></div>
 			<div className="flex flex-col text-4xl w-7/12">
 				{settings.map((setting) =>
-					renderRangeSetting(params[setting.id])
+					renderRangeSetting(params[setting.id], setting)
 				)}
 				<button
 					className="bg-transparent mt-8 p-0 font-semibold hover:opacity-75"

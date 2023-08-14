@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import cloneDeep from 'lodash/cloneDeep';
+import config from '../config/config.json';
 
 const getValue = (name) => {
-	const value = window.localStorage.getItem(name)?.value;
-	return value ? JSON.parse(value) : value;
+	const setting = window.localStorage.getItem(name);
+	return setting ? JSON.parse(setting).value : setting;
 };
 
 let currentIntersect = null;
@@ -14,17 +15,24 @@ let despawnStack = [];
 
 const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const fetchedSettings = {
+		// gameMode: getValue('gameMode'),
 		spawnRate: getValue('spawnRate'),
 		despawnRate: getValue('despawnRate'),
 		spread: getValue('spread'),
-		sensitivity: getValue('sensitivity'),
+		// sensitivity: getValue('sensitivity'),
 	};
 
 	const params = {
 		gameDuration: 1,
-		spawnRate: fetchedSettings.spawnRate || 2,
-		despawnRate: fetchedSettings.despawnRate || 0.5,
-		spread: fetchedSettings.spread || 10,
+
+		spawnRate:
+			fetchedSettings.spawnRate || config.settingsDefaultValues.spawnRate,
+
+		despawnRate:
+			fetchedSettings.despawnRate ||
+			config.settingsDefaultValues.despawnRate,
+
+		spread: fetchedSettings.spread || config.settingsDefaultValues.spread,
 	};
 
 	const spawnInterval =
@@ -45,11 +53,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 	gameInfoClone.started = true;
 
-	//spawn ball
 	const spawnBall = () => {
-		gameInfoClone.nextSpawn = parseFloat(
-			gameInfoClone.timeLeft - spawnInterval.toFixed(2)
-		);
 		const object = new THREE.Mesh(
 			new THREE.SphereGeometry(0.5, 16, 16),
 			new THREE.MeshBasicMaterial({ color: '#ff0000' })
@@ -62,6 +66,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 		scene.add(object);
 		updateObjects();
+		//if x gamemode
 		setDespawnTime(object);
 		gameInfoClone.targetsLeft--;
 	};
@@ -92,9 +97,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		updateObjects();
 	};
 
-	const endGame = () => {
-		clock.stop();
-		clearBalls();
+	const getScore = () => {
 		accuracy = (hits / (hits + whiffs + misses)) * 100;
 		gameInfoClone.score = {
 			hits,
@@ -102,9 +105,15 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 			whiffs,
 			accuracy,
 		};
-		gameInfoClone.started = false;
 		setGameInfo(gameInfoClone);
 		setCurrentScreen('score');
+	};
+
+	const endGame = () => {
+		clock.stop();
+		clearBalls();
+		gameInfoClone.started = false;
+		getScore();
 	};
 
 	//raycaster
@@ -129,6 +138,8 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	//game
 	const tick = () => {
 		// updateObjects();
+
+		//set up game modes here
 
 		elapsedTime =
 			clock.getElapsedTime() + gameInfoClone.lastRecordedElapsedTime;
@@ -155,8 +166,12 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 			clock.running &&
 			gameInfoClone.spawning &&
 			gameInfoClone.timeLeft < gameInfoClone.nextSpawn
-		)
+		) {
 			spawnBall();
+			gameInfoClone.nextSpawn = parseFloat(
+				gameInfoClone.timeLeft - spawnInterval.toFixed(2)
+			);
+		}
 
 		// despawn ball
 		if (
