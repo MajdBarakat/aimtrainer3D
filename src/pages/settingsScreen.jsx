@@ -8,19 +8,19 @@ const SettingsScreen = ({ onLeave }) => {
 			id: 'spawnRate',
 			name: 'Spawn Rate',
 			measuredIn: '(/s)',
-			value: 0,
+			value: 2,
 		},
 		{
 			id: 'despawnRate',
 			name: 'Despawn Rate',
 			measuredIn: '(/s)',
-			value: 0,
+			value: 0.5,
 		},
 		{
 			id: 'spread',
 			name: 'Spread',
 			measuredIn: '',
-			value: 0,
+			value: 10,
 		},
 		// {
 		// 	id: 'sensitivity',
@@ -61,10 +61,12 @@ const SettingsScreen = ({ onLeave }) => {
 		const fetchedSettings = [];
 		settings.forEach((setting) =>
 			fetchedSettings.push(
-				JSON.parse(window.localStorage.getItem(setting.id))
+				window.localStorage.getItem(setting.id)
+					? JSON.parse(window.localStorage.getItem(setting.id))
+					: undefined
 			)
 		);
-		fetchedSettings && setSettings(fetchedSettings);
+		fetchedSettings[0] !== undefined && setSettings(fetchedSettings);
 	}, []);
 
 	const handleChange = (id, value) => {

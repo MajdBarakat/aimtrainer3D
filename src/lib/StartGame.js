@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import cloneDeep from 'lodash/cloneDeep';
 
-const getValue = (name) => JSON.parse(window.localStorage.getItem(name)).value;
+const getValue = (name) => {
+	const value = window.localStorage.getItem(name)?.value;
+	return value ? JSON.parse(value) : value;
+};
 
 let currentIntersect = null;
 let elapsedTime = 0;
