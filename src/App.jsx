@@ -8,6 +8,7 @@ import PauseScreen from './pages/pauseScreen';
 import cloneDeep from 'lodash/cloneDeep';
 import HUD from './pages/hud';
 import SettingsScreen from './pages/settingsScreen';
+import ScoreScreen from './pages/scoreScreen';
 
 const App = () => {
 	const [loaded, setLoaded] = useState(false);
@@ -15,6 +16,7 @@ const App = () => {
 	const [sceneInit, setSceneInit] = useState();
 	const [gameInfo, setGameInfo] = useState();
 	const [time, setTime] = useState();
+	const [controls, setControls] = useState();
 
 	useEffect(() => {
 		const init = new SceneInit('threejs');
@@ -28,15 +30,16 @@ const App = () => {
 
 		clock.stop();
 		//controls
-		const controls = new PointerLockControls(camera, canvas);
+		const localControls = new PointerLockControls(camera, canvas);
+		setControls(localControls);
 
 		canvas.addEventListener('click', () => {
-			controls.lock();
+			localControls.lock();
 		});
 
-		controls.addEventListener('lock', () => {});
+		localControls.addEventListener('lock', () => {});
 
-		controls.addEventListener('unlock', () => {
+		localControls.addEventListener('unlock', () => {
 			setGameInfo((freshState) => {
 				const gameInfoClone = cloneDeep(freshState);
 				if (gameInfoClone.started) {
@@ -115,7 +118,7 @@ const App = () => {
 
 	const handleStart = async (isContinuing) => {
 		setCurrentScreen(null);
-		await countdown();
+		// await countdown();
 		if (isContinuing) {
 			const gameInfoClone = cloneDeep(gameInfo);
 			gameInfo.started = true;
@@ -144,7 +147,12 @@ const App = () => {
 			{currentScreen === 'settings' && (
 				<SettingsScreen onLeave={() => setCurrentScreen('start')} />
 			)}
-			{/* {currentScreen === 'score' && <SettingsScreen />} */}
+			{currentScreen === 'score' && (
+				<ScoreScreen
+					score={gameInfo.score}
+					onInit={() => controls.unlock()}
+				/>
+			)}
 			{currentScreen === 'start' && (
 				<StartScreen
 					onStart={async () => await handleStart()}

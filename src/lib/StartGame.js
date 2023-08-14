@@ -3,13 +3,6 @@ import cloneDeep from 'lodash/cloneDeep';
 
 const getValue = (name) => JSON.parse(window.localStorage.getItem(name)).value;
 
-const fetchedSettings = {
-	spawnRate: getValue('spawnRate'),
-	despawnRate: getValue('despawnRate'),
-	spread: getValue('spread'),
-	sensitivity: getValue('sensitivity'),
-};
-
 let currentIntersect = null;
 let elapsedTime = 0;
 
@@ -17,8 +10,15 @@ let objects = [];
 let despawnStack = [];
 
 const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
+	const fetchedSettings = {
+		spawnRate: getValue('spawnRate'),
+		despawnRate: getValue('despawnRate'),
+		spread: getValue('spread'),
+		sensitivity: getValue('sensitivity'),
+	};
+
 	const params = {
-		gameDuration: 15,
+		gameDuration: 1,
 		spawnRate: fetchedSettings.spawnRate || 2,
 		despawnRate: fetchedSettings.despawnRate || 0.5,
 		spread: fetchedSettings.spread || 10,
@@ -91,9 +91,17 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 	const endGame = () => {
 		clock.stop();
+		clearBalls();
 		accuracy = (hits / (hits + whiffs + misses)) * 100;
-		setCurrentScreen('');
-		return hits, misses, whiffs;
+		gameInfoClone.score = {
+			hits,
+			misses,
+			whiffs,
+			accuracy,
+		};
+		gameInfoClone.started = false;
+		setGameInfo(gameInfoClone);
+		setCurrentScreen('score');
 	};
 
 	//raycaster
