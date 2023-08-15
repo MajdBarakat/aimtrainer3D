@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import cloneDeep from 'lodash/cloneDeep';
+import _ from 'lodash';
 import config from '../config/config.json';
 
 const getValue = (name) => {
@@ -12,10 +12,14 @@ let elapsedTime = 0;
 
 let objects = [];
 let despawnStack = [];
+let intersects = [];
+let grid;
+const gridx = 3;
+const gridy = 3;
 
 const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const fetchedSettings = {
-		// gameMode: getValue('gameMode'),
+		gameMode: getValue('gameMode'),
 		spawnRate: getValue('spawnRate'),
 		despawnRate: getValue('despawnRate'),
 		spread: getValue('spread'),
@@ -40,7 +44,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		Math.floor(params.gameDuration * params.spawnRate);
 
 	const { scene, camera, canvas, clock } = init;
-	const gameInfoClone = cloneDeep(gameInfo);
+	const gameInfoClone = _.cloneDeep(gameInfo);
 
 	let { hits, misses, whiffs, accuracy } = gameInfoClone.score;
 
@@ -59,9 +63,28 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 			new THREE.MeshBasicMaterial({ color: '#ff0000' })
 		);
 
+		if (fetchedSettings.gameMode === 'gridShot') {
+			let spotFound = false;
+			let posX;
+			let posY;
+			while (!spotFound) {
+				const randomX = Math.floor(Math.random() * gridx);
+				const randomY = Math.floor(Math.random() * gridy);
+				if (!grid[randomX][randomY].targetId) {
+					grid[randomX][randomY].targetId = object.id;
+					spotFound = true;
+				}
+				console.log(grid);
+			}
+			// object.position.x = (Math.random() - 0.5) * ;
+			// object.position.y = Math.random() * (params.spread / 2);
+			// object.position.z = -10;
+		}
+
 		object.position.x = (Math.random() - 0.5) * params.spread;
 		object.position.y = Math.random() * (params.spread / 2);
 		object.position.z = -Math.random() * (params.spread / 2);
+
 		object.name = 'target';
 
 		scene.add(object);
@@ -116,6 +139,51 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		getScore();
 	};
 
+	const speedTestGame = () => {
+		if (
+			clock.running &&
+			gameInfoClone.spawning &&
+			gameInfoClone.timeLeft < gameInfoClone.nextSpawn
+		) {
+			spawnBall();
+			gameInfoClone.nextSpawn = parseFloat(
+				gameInfoClone.timeLeft - spawnInterval.toFixed(2)
+			);
+		}
+
+		if (
+			despawnStack.length &&
+			gameInfoClone.timeLeft <= despawnStack[0].despawnTime
+		)
+			despawnBall();
+
+		if (
+			accuracy === null &&
+			gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate
+		)
+			endGame();
+
+		if (gameInfoClone.targetsLeft === 0 && gameInfoClone.started) {
+			gameInfoClone.spawning = false;
+		}
+	};
+
+	const initGrid = () => {
+		grid = [];
+		for (let x = 0; x < gridx; x++) {
+			grid[x] = [];
+			for (let y = 0; y < gridy; y++) {
+				grid[x][y] = { x: x, y: y, targetId: '' };
+			}
+		}
+	};
+
+	const gridShotGame = () => {
+		if (!grid) initGrid();
+
+		if (gameInfoClone.timeLeft > 0) spawnBall();
+	};
+
 	//raycaster
 	const raycaster = new THREE.Raycaster();
 
@@ -131,7 +199,31 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	gameInfoClone.targetsLeft =
 		gameInfoClone.targetsLeft ||
 		Math.floor(params.gameDuration * params.spawnRate);
+
 	gameInfoClone.nextSpawn = gameInfoClone.nextSpawn || params.gameDuration;
+
+	const objectDetection = () => {
+		const cameraDirection = new THREE.Vector3();
+		const cameraPosition = new THREE.Vector3();
+		camera.getWorldDirection(cameraDirection);
+		camera.getWorldPosition(cameraPosition);
+
+		raycaster.set(cameraPosition, cameraDirection);
+
+		intersects = raycaster.intersectObjects(objects);
+
+		if (intersects.length) {
+			if (!currentIntersect) {
+				// console.log('entered')
+			}
+			currentIntersect = intersects[0];
+		} else {
+			if (currentIntersect) {
+				// console.log('exited')
+				currentIntersect = null;
+			}
+		}
+	};
 
 	clock.start();
 
@@ -159,59 +251,13 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		// 	objects.length
 		// );
 
-		// console.log(elapsedTime);
-		// console.log(despawnStack);
-
-		if (
-			clock.running &&
-			gameInfoClone.spawning &&
-			gameInfoClone.timeLeft < gameInfoClone.nextSpawn
-		) {
-			spawnBall();
-			gameInfoClone.nextSpawn = parseFloat(
-				gameInfoClone.timeLeft - spawnInterval.toFixed(2)
-			);
-		}
-
-		// despawn ball
-		if (
-			despawnStack.length &&
-			gameInfoClone.timeLeft <= despawnStack[0].despawnTime
-		)
-			despawnBall();
-
-		//end of game
-		if (
-			accuracy === null &&
-			gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate
-		)
-			endGame();
-
-		if (gameInfoClone.targetsLeft === 0 && gameInfoClone.started) {
-			gameInfoClone.spawning = false;
-		}
+		//speedTest Game Mode
+		if (fetchedSettings.gameMode === 'speedTest') speedTestGame();
+		//gridShot Game Mode
+		else if (fetchedSettings.gameMode === 'gridShot') gridShotGame();
 
 		//object detection
-		const cameraDirection = new THREE.Vector3();
-		const cameraPosition = new THREE.Vector3();
-		camera.getWorldDirection(cameraDirection);
-		camera.getWorldPosition(cameraPosition);
-
-		raycaster.set(cameraPosition, cameraDirection);
-
-		const intersects = raycaster.intersectObjects(objects);
-
-		if (intersects.length) {
-			if (!currentIntersect) {
-				// console.log('entered')
-			}
-			currentIntersect = intersects[0];
-		} else {
-			if (currentIntersect) {
-				// console.log('exited')
-				currentIntersect = null;
-			}
-		}
+		objectDetection();
 
 		//set hover color
 		objects.forEach((obj) => obj.material.color.set(0xff0000));

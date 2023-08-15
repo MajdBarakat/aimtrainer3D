@@ -36,7 +36,7 @@
 			"measuredIn": "",
 			"value": 0,
 			"slider": true,
-			"gameModes": ["speedTest", "timeTrial"]
+			"gameModes": ["speedTest", "gridShot"]
 		}
 	],
 	"settingsSliderParamaters": {
@@ -70,8 +70,8 @@
 			"name": "SPEED TEST"
 		},
 		{
-			"id": "timeTrial",
-			"name": "TIME TRIAL"
+			"id": "gridShot",
+			"name": "GRID SHOT"
 		}
 	],
 	"difficultyLinkedSettings": ["spawnRate", "despawnRate", "spread"],
