@@ -31,10 +31,28 @@ const SettingsScreen = ({ onLeave }) => {
 		setSettings(defaultSettings);
 	};
 
+	const fetchSetting = (id) => settings.find((setting) => setting.id === id);
+
+	const fetchSettingIndex = (id) =>
+		settings.findIndex((setting) => setting.id === id);
+
 	const handleChange = (id, newValue) => {
 		const settingsClone = cloneDeep(settings);
-		const index = settingsClone.findIndex((setting) => setting.id === id);
+		const index = fetchSettingIndex(id);
 		settingsClone[index].value = newValue;
+		if (id === 'difficulty') {
+			const { difficultyOptions } = config;
+			const { values } = difficultyOptions.find(
+				(option) => option.id === newValue
+			);
+			settingsClone.forEach(
+				(setting) =>
+					(setting.value = values[setting.id] || setting.value)
+			);
+		} else if (config.difficultyLinkedSettings.includes(id)) {
+			const indexOfDifficulty = fetchSettingIndex('difficulty');
+			settingsClone[indexOfDifficulty].value = '';
+		}
 		setSettings(settingsClone);
 		settingsClone.forEach((setting) =>
 			window.localStorage.setItem(setting.id, JSON.stringify(setting))
@@ -58,7 +76,7 @@ const SettingsScreen = ({ onLeave }) => {
 	};
 
 	const renderOptions = (options, settingId) => {
-		const setting = settings.find((setting) => setting.id === settingId);
+		const setting = fetchSetting(settingId);
 		return options.map((option) =>
 			renderTextOption(
 				setting.id,
@@ -96,10 +114,7 @@ const SettingsScreen = ({ onLeave }) => {
 		);
 	};
 
-	const gameMode = settings.find(
-		(setting) => setting.id === 'gameMode'
-	).value;
-	// console.log(gameMode);
+	const gameMode = fetchSetting('gameMode').value;
 
 	return (
 		<div className="flex flex-col justify-center items-center w-screen h-screen absolute bg-black/75">
