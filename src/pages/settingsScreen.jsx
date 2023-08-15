@@ -6,7 +6,7 @@ import config from '../config/config.json';
 const SettingsScreen = ({ onLeave }) => {
 	const [settings, setSettings] = useState(config.settingsFormat);
 
-	const params = config.settingsSliderParamaters;
+	const sliderParams = config.settingsSliderParamaters;
 
 	useEffect(() => {
 		const fetchedSettings = [];
@@ -31,17 +31,45 @@ const SettingsScreen = ({ onLeave }) => {
 		setSettings(defaultSettings);
 	};
 
-	const handleChange = (id, value) => {
+	const handleChange = (id, newValue) => {
 		const settingsClone = cloneDeep(settings);
-		const index = settings.findIndex((setting) => setting.id === id);
-		settingsClone[index].value = value;
+		const index = settingsClone.findIndex((setting) => setting.id === id);
+		settingsClone[index].value = newValue;
 		setSettings(settingsClone);
 		settingsClone.forEach((setting) =>
 			window.localStorage.setItem(setting.id, JSON.stringify(setting))
 		);
 	};
 
-	const renderRangeSetting = (param, setting) => {
+	const renderTextOption = (settingId, option, active, onClick) => {
+		return (
+			<button
+				className={`${
+					active
+						? 'active text-white'
+						: 'text-transparent text-outline'
+				} `}
+				onClick={() => onClick(settingId, option.id)}
+				key={option.id}
+			>
+				{option.name}
+			</button>
+		);
+	};
+
+	const renderOptions = (options, settingId) => {
+		const setting = settings.find((setting) => setting.id === settingId);
+		return options.map((option) =>
+			renderTextOption(
+				setting.id,
+				option,
+				setting.value === option.id,
+				handleChange
+			)
+		);
+	};
+
+	const renderSliderSetting = (param, setting, disabled) => {
 		return (
 			<div className="flex flex-row" key={param.id}>
 				<div className="w-1/3">
@@ -57,6 +85,7 @@ const SettingsScreen = ({ onLeave }) => {
 							value={setting.value}
 							params={param}
 							onChange={handleChange}
+							disabled={disabled}
 						/>
 					</div>
 					<div className="w-2/12 text-right">
@@ -67,7 +96,10 @@ const SettingsScreen = ({ onLeave }) => {
 		);
 	};
 
-	const renderTextOptions = () => {};
+	const gameMode = settings.find(
+		(setting) => setting.id === 'gameMode'
+	).value;
+	// console.log(gameMode);
 
 	return (
 		<div className="flex flex-col justify-center items-center w-screen h-screen absolute bg-black/75">
@@ -77,10 +109,24 @@ const SettingsScreen = ({ onLeave }) => {
 			<div className=" flex flex-col text-4xl w-7/12 items-center">
 				<h2 className="text-6xl ">GAME MODE</h2>
 			</div>
-			<div className=" flex flex-col text-4xl w-7/12 items-center"></div>
+			<div className=" flex flex-row text-4xl font-semibold w-7/12 items-center justify-center gap-10">
+				{renderOptions(config.gameModeOptions, 'gameMode')}
+			</div>
+			<div className=" flex flex-col text-4xl w-7/12 items-center">
+				<h2 className="text-6xl ">DIFFICULTY</h2>
+			</div>
+			<div className=" flex flex-row text-4xl font-semibold w-7/12 items-center justify-center gap-10">
+				{renderOptions(config.difficultyOptions, 'difficulty')}
+			</div>
 			<div className="flex flex-col text-4xl w-7/12">
-				{settings.map((setting) =>
-					renderRangeSetting(params[setting.id], setting)
+				{settings.map(
+					(setting) =>
+						sliderParams[setting.id] !== undefined &&
+						renderSliderSetting(
+							sliderParams[setting.id],
+							setting,
+							!setting.gameModes.includes(gameMode)
+						)
 				)}
 				<button
 					className="bg-transparent mt-8 p-0 font-semibold hover:opacity-75"

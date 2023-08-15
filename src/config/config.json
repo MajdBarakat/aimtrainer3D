@@ -1,22 +1,42 @@
 {
 	"settingsFormat": [
 		{
+			"id": "gameMode",
+			"name": "Game Mode",
+			"measuredIn": "",
+			"value": "speedTest",
+			"slider": false
+		},
+		{
+			"id": "difficulty",
+			"name": "Difficulty",
+			"measuredIn": "",
+			"value": "",
+			"slider": false
+		},
+		{
 			"id": "spawnRate",
 			"name": "Spawn Rate",
 			"measuredIn": "(/s)",
-			"value": 0
+			"value": 0,
+			"slider": true,
+			"gameModes": ["speedTest"]
 		},
 		{
 			"id": "despawnRate",
 			"name": "Despawn Rate",
 			"measuredIn": "(/s)",
-			"value": 0
+			"value": 0,
+			"slider": true,
+			"gameModes": ["speedTest"]
 		},
 		{
 			"id": "spread",
 			"name": "Spread",
 			"measuredIn": "",
-			"value": 0
+			"value": 0,
+			"slider": true,
+			"gameModes": ["speedTest", "timeTrial"]
 		}
 	],
 	"settingsSliderParamaters": {
@@ -43,5 +63,53 @@
 		"spawnRate": 2,
 		"despawnRate": 0.5,
 		"spread": 10
-	}
+	},
+	"gameModeOptions": [
+		{
+			"id": "speedTest",
+			"name": "SPEED TEST"
+		},
+		{
+			"id": "timeTrial",
+			"name": "TIME TRIAL"
+		}
+	],
+	"difficultyOptions": [
+		{
+			"id": "easy",
+			"name": "EASY",
+			"values": {
+				"spawnRate": 0,
+				"despawnRate": 0,
+				"spread": 0
+			}
+		},
+		{
+			"id": "normal",
+			"name": "NORMAL",
+			"values": {
+				"spawnRate": 0,
+				"despawnRate": 0,
+				"spread": 0
+			}
+		},
+		{
+			"id": "hard",
+			"name": "HARD",
+			"values": {
+				"spawnRate": 0,
+				"despawnRate": 0,
+				"spread": 0
+			}
+		},
+		{
+			"id": "impossible",
+			"name": "IMPOSSIBLE",
+			"values": {
+				"spawnRate": 0,
+				"despawnRate": 0,
+				"spread": 0
+			}
+		}
+	]
 }
