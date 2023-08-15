@@ -42,6 +42,15 @@
 	/* background: #d7d7d7; */
 }
 
+.rc-slider-disabled {
+	background-color: black;
+}
+
+.text-outline {
+	-webkit-text-stroke-width: 1px;
+	-webkit-text-stroke-color: white;
+}
+
 /* .rc-slider-handle:focus-visible,
 .rc-slider-handle:focus,
 .rc-slider-handle-click-focused:focus,

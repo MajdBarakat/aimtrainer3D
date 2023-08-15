@@ -2,7 +2,7 @@ import ReactSlider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 // import '../index.css';
 
-const Slider = ({ defaultValue, value, params, onChange }) => {
+const Slider = ({ defaultValue, value, params, onChange, disabled }) => {
 	return (
 		<ReactSlider
 			defaultValue={defaultValue}
@@ -11,6 +11,7 @@ const Slider = ({ defaultValue, value, params, onChange }) => {
 			max={params.max}
 			step={params.step}
 			onChange={(newValue) => onChange(params.id, newValue)}
+			disabled={disabled}
 			style={{
 				height: '1rem',
 				margin: '0',
