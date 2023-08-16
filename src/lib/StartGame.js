@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import _ from 'lodash';
+import _, { random } from 'lodash';
 import config from '../config/config.json';
 
 const getValue = (name) => {
@@ -14,8 +14,9 @@ let objects = [];
 let despawnStack = [];
 let intersects = [];
 let grid;
-const gridx = 3;
-const gridy = 3;
+let lastCell = {};
+const gridx = 4;
+const gridy = 4;
 
 const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const fetchedSettings = {
@@ -27,7 +28,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	};
 
 	const params = {
-		gameDuration: 1,
+		gameDuration: 10,
 
 		spawnRate:
 			fetchedSettings.spawnRate || config.settingsDefaultValues.spawnRate,
@@ -64,26 +65,33 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		);
 
 		if (fetchedSettings.gameMode === 'gridShot') {
-			let spotFound = false;
+			let cellFound = false;
 			let posX;
 			let posY;
-			while (!spotFound) {
+			while (!cellFound) {
 				const randomX = Math.floor(Math.random() * gridx);
 				const randomY = Math.floor(Math.random() * gridy);
-				if (!grid[randomX][randomY].targetId) {
-					grid[randomX][randomY].targetId = object.id;
-					spotFound = true;
+				const cell = grid[randomX][randomY];
+				if (
+					!cell.targetId &&
+					randomX !== lastCell.x &&
+					randomY !== lastCell.y
+				) {
+					cell.targetId = object.id;
+					cellFound = true;
+					posX = cell.x;
+					posY = cell.y;
 				}
-				console.log(grid);
 			}
-			// object.position.x = (Math.random() - 0.5) * ;
-			// object.position.y = Math.random() * (params.spread / 2);
-			// object.position.z = -10;
+			object.position.x = posX;
+			object.position.y = posY;
+			// console.log(posX - gridx / 2);
+			object.position.z = -5;
+		} else {
+			object.position.x = (Math.random() - 0.5) * params.spread;
+			object.position.y = Math.random() * (params.spread / 2);
+			object.position.z = -Math.random() * (params.spread / 2);
 		}
-
-		object.position.x = (Math.random() - 0.5) * params.spread;
-		object.position.y = Math.random() * (params.spread / 2);
-		object.position.z = -Math.random() * (params.spread / 2);
 
 		object.name = 'target';
 
@@ -170,10 +178,16 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 	const initGrid = () => {
 		grid = [];
+		const midPointX = (gridx - 1) / 2;
+		// const midPointY = (gridy - 1) / 2;
 		for (let x = 0; x < gridx; x++) {
 			grid[x] = [];
 			for (let y = 0; y < gridy; y++) {
-				grid[x][y] = { x: x, y: y, targetId: '' };
+				grid[x][y] = {
+					x: x - midPointX,
+					y: y - 1,
+					targetId: '',
+				};
 			}
 		}
 	};
@@ -181,7 +195,11 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const gridShotGame = () => {
 		if (!grid) initGrid();
 
-		if (gameInfoClone.timeLeft > 0) spawnBall();
+		if (parseFloat(gameInfoClone.timeLeft) > 0 && objects.length < 3)
+			// add custom value for how many balls allowed at a time
+			spawnBall();
+
+		if (accuracy === null && gameInfoClone.timeLeft <= 0) endGame();
 	};
 
 	//raycaster
@@ -191,6 +209,19 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	canvas.addEventListener('click', (e) => {
 		if (gameInfoClone.started && currentIntersect) {
 			scene.remove(currentIntersect.object);
+			if (fetchedSettings.gameMode === 'gridShot') {
+				for (let x = 0; x < grid.length; x++) {
+					for (let y = 0; y < grid[x].length; y++) {
+						if (
+							grid[x][y].targetId === currentIntersect.object.id
+						) {
+							grid[x][y].targetId = '';
+							lastCell.x = x;
+							lastCell.y = y;
+						}
+					}
+				}
+			}
 			updateObjects();
 			hits++;
 		} else if (gameInfoClone.started && !currentIntersect) whiffs++;

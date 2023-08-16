@@ -35,6 +35,7 @@
 	font-family: 'Kanit';
 	color: white;
 	box-sizing: border-box;
+	user-select: none;
 }
 .rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
 	border-color: transparent;
