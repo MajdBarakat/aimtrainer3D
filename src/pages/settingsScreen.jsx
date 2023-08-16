@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Slider from '../components/slider';
-import { cloneDeep } from 'lodash';
+import { clone, cloneDeep } from 'lodash';
 import config from '../config/config.json';
 
 const SettingsScreen = ({ onLeave }) => {
@@ -14,7 +14,7 @@ const SettingsScreen = ({ onLeave }) => {
 			fetchedSettings.push(
 				window.localStorage.getItem(setting.id)
 					? JSON.parse(window.localStorage.getItem(setting.id))
-					: undefined
+					: setDefaultValue(setting)
 			)
 		);
 		fetchedSettings[0] !== undefined
@@ -24,11 +24,13 @@ const SettingsScreen = ({ onLeave }) => {
 
 	const setDefaultValues = () => {
 		const defaultSettings = cloneDeep(settings);
-		defaultSettings.forEach(
-			(setting) =>
-				(setting.value = config.settingsDefaultValues[setting.id])
-		);
+		defaultSettings.forEach((setting) => setDefaultValue(setting));
 		setSettings(defaultSettings);
+	};
+
+	const setDefaultValue = (setting) => {
+		setting.value = config.settingsDefaultValues[setting.id];
+		return setting;
 	};
 
 	const fetchSetting = (id) => settings.find((setting) => setting.id === id);
@@ -51,7 +53,7 @@ const SettingsScreen = ({ onLeave }) => {
 			);
 		} else if (config.difficultyLinkedSettings.includes(id)) {
 			const indexOfDifficulty = fetchSettingIndex('difficulty');
-			settingsClone[indexOfDifficulty].value = '';
+			settingsClone[indexOfDifficulty].value = 'custom';
 		}
 		setSettings(settingsClone);
 		settingsClone.forEach((setting) =>
@@ -87,9 +89,16 @@ const SettingsScreen = ({ onLeave }) => {
 		);
 	};
 
-	const renderSliderSetting = (param, setting, disabled) => {
+	const renderSliderSetting = (params, setting, disabled) => {
+		if (setting.id === 'targetCount') {
+			const gridArea =
+				fetchSetting('gridX').value * fetchSetting('gridY').value;
+			const max = Math.floor(gridArea / 3);
+			params.max = max;
+			if (setting.value > max) handleChange('targetCount', max);
+		}
 		return (
-			<div className="flex flex-row" key={param.id}>
+			<div className="flex flex-row" key={params.id}>
 				<div className="w-1/3">
 					<h1>
 						{setting.name}
@@ -101,7 +110,7 @@ const SettingsScreen = ({ onLeave }) => {
 						<Slider
 							defaultValue={1}
 							value={setting.value}
-							params={param}
+							params={params}
 							onChange={handleChange}
 							disabled={disabled}
 						/>
@@ -137,11 +146,8 @@ const SettingsScreen = ({ onLeave }) => {
 				{settings.map(
 					(setting) =>
 						sliderParams[setting.id] !== undefined &&
-						renderSliderSetting(
-							sliderParams[setting.id],
-							setting,
-							!setting.gameModes.includes(gameMode)
-						)
+						setting.gameModes.includes(gameMode) &&
+						renderSliderSetting(sliderParams[setting.id], setting)
 				)}
 				<button
 					className="bg-transparent mt-8 p-0 font-semibold hover:opacity-75"

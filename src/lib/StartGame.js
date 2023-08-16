@@ -7,38 +7,35 @@ const getValue = (name) => {
 	return setting ? JSON.parse(setting).value : setting;
 };
 
+//game variables
 let currentIntersect = null;
 let elapsedTime = 0;
-
 let objects = [];
 let despawnStack = [];
 let intersects = [];
 let grid;
 let lastCell = {};
-const gridx = 4;
-const gridy = 4;
 
-const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
-	const fetchedSettings = {
-		gameMode: getValue('gameMode'),
-		spawnRate: getValue('spawnRate'),
-		despawnRate: getValue('despawnRate'),
-		spread: getValue('spread'),
-		// sensitivity: getValue('sensitivity'),
+const StartGame = (
+	init,
+	gameInfo,
+	setGameInfo,
+	setTime,
+	setCurrentScreen,
+	test = false
+) => {
+	const initParams = () => {
+		const params = {};
+		config.settingsFormat.forEach(
+			(setting) =>
+				(params[setting.id] =
+					getValue(setting.id) ||
+					config.settingsDefaultValues[setting.id])
+		);
+		return params;
 	};
 
-	const params = {
-		gameDuration: 10,
-
-		spawnRate:
-			fetchedSettings.spawnRate || config.settingsDefaultValues.spawnRate,
-
-		despawnRate:
-			fetchedSettings.despawnRate ||
-			config.settingsDefaultValues.despawnRate,
-
-		spread: fetchedSettings.spread || config.settingsDefaultValues.spread,
-	};
+	const params = initParams();
 
 	const spawnInterval =
 		params.gameDuration /
@@ -58,19 +55,26 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 	gameInfoClone.started = true;
 
+	const addPaddingandRadius = (position) =>
+		position > 0
+			? position + params.gridPadding + params.targetRadius
+			: position < 0
+			? position - params.gridPadding - params.targetRadius
+			: position;
+
 	const spawnBall = () => {
 		const object = new THREE.Mesh(
-			new THREE.SphereGeometry(0.5, 16, 16),
+			new THREE.SphereGeometry(params.targetRadius, 16, 16),
 			new THREE.MeshBasicMaterial({ color: '#ff0000' })
 		);
 
-		if (fetchedSettings.gameMode === 'gridShot') {
+		if (params.gameMode === 'gridShot') {
 			let cellFound = false;
 			let posX;
 			let posY;
 			while (!cellFound) {
-				const randomX = Math.floor(Math.random() * gridx);
-				const randomY = Math.floor(Math.random() * gridy);
+				const randomX = Math.floor(Math.random() * params.gridX);
+				const randomY = Math.floor(Math.random() * params.gridY);
 				const cell = grid[randomX][randomY];
 				if (
 					!cell.targetId &&
@@ -83,14 +87,19 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 					posY = cell.y;
 				}
 			}
-			object.position.x = posX;
-			object.position.y = posY;
-			// console.log(posX - gridx / 2);
-			object.position.z = -5;
+			object.position.x = addPaddingandRadius(posX);
+			object.position.y = addPaddingandRadius(posY);
+			object.position.z = params.gridOffsetZ;
 		} else {
-			object.position.x = (Math.random() - 0.5) * params.spread;
-			object.position.y = Math.random() * (params.spread / 2);
-			object.position.z = -Math.random() * (params.spread / 2);
+			object.position.x = addPaddingandRadius(
+				(Math.random() - 0.5) * params.spreadX
+			);
+			object.position.y = addPaddingandRadius(
+				Math.random() * (params.spreadY / 2)
+			);
+			object.position.z = addPaddingandRadius(
+				-Math.random() * (params.spreadZ / 2)
+			);
 		}
 
 		object.name = 'target';
@@ -178,14 +187,14 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 
 	const initGrid = () => {
 		grid = [];
-		const midPointX = (gridx - 1) / 2;
-		// const midPointY = (gridy - 1) / 2;
-		for (let x = 0; x < gridx; x++) {
+		const midPointX = (params.gridX - 1) / 2;
+		// const midPointY = (params.gridY - 1) / 2;
+		for (let x = 0; x < params.gridX; x++) {
 			grid[x] = [];
-			for (let y = 0; y < gridy; y++) {
+			for (let y = 0; y < params.gridY; y++) {
 				grid[x][y] = {
 					x: x - midPointX,
-					y: y - 1,
+					y: y - params.targetRadius,
 					targetId: '',
 				};
 			}
@@ -195,7 +204,10 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	const gridShotGame = () => {
 		if (!grid) initGrid();
 
-		if (parseFloat(gameInfoClone.timeLeft) > 0 && objects.length < 3)
+		if (
+			parseFloat(gameInfoClone.timeLeft) > 0 &&
+			objects.length < params.targetCount
+		)
 			// add custom value for how many balls allowed at a time
 			spawnBall();
 
@@ -209,7 +221,7 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 	canvas.addEventListener('click', (e) => {
 		if (gameInfoClone.started && currentIntersect) {
 			scene.remove(currentIntersect.object);
-			if (fetchedSettings.gameMode === 'gridShot') {
+			if (params.gameMode === 'gridShot') {
 				for (let x = 0; x < grid.length; x++) {
 					for (let y = 0; y < grid[x].length; y++) {
 						if (
@@ -283,9 +295,9 @@ const StartGame = (init, gameInfo, setGameInfo, setTime, setCurrentScreen) => {
 		// );
 
 		//speedTest Game Mode
-		if (fetchedSettings.gameMode === 'speedTest') speedTestGame();
+		if (params.gameMode === 'speedTest') speedTestGame();
 		//gridShot Game Mode
-		else if (fetchedSettings.gameMode === 'gridShot') gridShotGame();
+		else if (params.gameMode === 'gridShot') gridShotGame();
 
 		//object detection
 		objectDetection();
