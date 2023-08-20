@@ -93,7 +93,7 @@ const SettingsScreen = ({ onLeave }) => {
 		if (setting.id === 'targetCount') {
 			const gridArea =
 				fetchSetting('gridX').value * fetchSetting('gridY').value;
-			const max = Math.floor(gridArea / 3);
+			const max = Math.floor(gridArea / 2);
 			params.max = max;
 			if (setting.value > max) handleChange('targetCount', max);
 		}

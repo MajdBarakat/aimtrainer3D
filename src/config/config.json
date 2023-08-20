@@ -123,7 +123,7 @@
 		"targetRadius": {
 			"id": "targetRadius",
 			"min": 0.1,
-			"max": 3,
+			"max": 1,
 			"step": 0.01
 		},
 		"spawnRate": {
@@ -141,19 +141,19 @@
 		"spreadX": {
 			"id": "spreadX",
 			"min": 1,
-			"max": 20,
+			"max": 15,
 			"step": 0.01
 		},
 		"spreadY": {
 			"id": "spreadY",
 			"min": 1,
-			"max": 20,
+			"max": 15,
 			"step": 0.01
 		},
 		"spreadZ": {
 			"id": "spreadZ",
 			"min": 1,
-			"max": 20,
+			"max": 15,
 			"step": 0.01
 		},
 		"targetCount": {
@@ -165,7 +165,7 @@
 		"gridPadding": {
 			"id": "gridPadding",
 			"min": 0,
-			"max": 3,
+			"max": 1,
 			"step": 0.01
 		},
 		"gridX": {
@@ -182,8 +182,8 @@
 		},
 		"gridOffsetZ": {
 			"id": "gridOffsetZ",
-			"min": 1,
-			"max": 20,
+			"min": 0.1,
+			"max": 12,
 			"step": 0.01
 		}
 	},
@@ -201,7 +201,7 @@
 		"gridPadding": 0,
 		"gridX": 3,
 		"gridY": 3,
-		"gridOffsetZ": 0
+		"gridOffsetZ": 0.1
 	},
 	"gameModeOptions": [
 		{
@@ -233,7 +233,7 @@
 				"gridPadding": 0.1,
 				"gridX": 3,
 				"gridY": 3,
-				"gridOffsetZ": 0
+				"gridOffsetZ": 0.1
 			}
 		},
 		{
@@ -249,7 +249,7 @@
 				"gridPadding": 0.5,
 				"gridX": 4,
 				"gridY": 4,
-				"gridOffsetZ": 0
+				"gridOffsetZ": 5
 			}
 		},
 		{
@@ -265,7 +265,7 @@
 				"gridPadding": 0.5,
 				"gridX": 5,
 				"gridY": 5,
-				"gridOffsetZ": 0
+				"gridOffsetZ": 7
 			}
 		},
 		{
@@ -274,14 +274,14 @@
 			"values": {
 				"spawnRate": 2,
 				"despawnRate": 1.5,
-				"spreadX": 20,
-				"spreadY": 20,
-				"spreadZ": 20,
+				"spreadX": 15,
+				"spreadY": 15,
+				"spreadZ": 15,
 				"targetCount": 5,
 				"gridPadding": 0.5,
 				"gridX": 6,
 				"gridY": 6,
-				"gridOffsetZ": 0
+				"gridOffsetZ": 10
 			}
 		}
 	]

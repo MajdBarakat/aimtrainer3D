@@ -155,6 +155,7 @@ const App = () => {
 			)}
 			{currentScreen === 'start' && (
 				<StartScreen
+					sceneInit={sceneInit}
 					onStart={async () => await handleStart()}
 					onSettings={() => setCurrentScreen('settings')}
 				/>

@@ -36,6 +36,7 @@ const StartGame = (
 	};
 
 	const params = initParams();
+	console.log(params);
 
 	const spawnInterval =
 		params.gameDuration /
@@ -54,13 +55,6 @@ const StartGame = (
 	};
 
 	gameInfoClone.started = true;
-
-	const addPaddingandRadius = (position) =>
-		position > 0
-			? position + params.gridPadding + params.targetRadius
-			: position < 0
-			? position - params.gridPadding - params.targetRadius
-			: position;
 
 	const spawnBall = () => {
 		const object = new THREE.Mesh(
@@ -87,26 +81,20 @@ const StartGame = (
 					posY = cell.y;
 				}
 			}
-			object.position.x = addPaddingandRadius(posX);
-			object.position.y = addPaddingandRadius(posY);
-			object.position.z = params.gridOffsetZ;
+			object.position.x = posX;
+			object.position.y = posY;
+			object.position.z = 2 - params.gridOffsetZ;
 		} else {
-			object.position.x = addPaddingandRadius(
-				(Math.random() - 0.5) * params.spreadX
-			);
-			object.position.y = addPaddingandRadius(
-				Math.random() * (params.spreadY / 2)
-			);
-			object.position.z = addPaddingandRadius(
-				-Math.random() * (params.spreadZ / 2)
-			);
+			object.position.x = (Math.random() - 0.5) * params.spreadX;
+
+			object.position.y = Math.random() * (params.spreadY / 2);
+			object.position.z = 2 - Math.random() * (params.spreadZ / 2);
 		}
 
 		object.name = 'target';
 
 		scene.add(object);
 		updateObjects();
-		//if x gamemode
 		setDespawnTime(object);
 		gameInfoClone.targetsLeft--;
 	};
@@ -131,9 +119,12 @@ const StartGame = (
 		despawnStack.shift();
 	};
 
-	const clearBalls = () => {
+	const resetGame = () => {
 		scene.children = scene.children.filter((obj) => obj.name != 'target');
 		despawnStack = [];
+		grid = null;
+		lastCell = {};
+		camera.lookAt(0, 0, 0);
 		updateObjects();
 	};
 
@@ -151,7 +142,7 @@ const StartGame = (
 
 	const endGame = () => {
 		clock.stop();
-		clearBalls();
+		resetGame();
 		gameInfoClone.started = false;
 		getScore();
 	};
@@ -176,7 +167,8 @@ const StartGame = (
 
 		if (
 			accuracy === null &&
-			gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate
+			((gameInfoClone.targetsLeft === 0 && gameInfoClone.timeLeft <= 0) ||
+				gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate)
 		)
 			endGame();
 
@@ -187,14 +179,17 @@ const StartGame = (
 
 	const initGrid = () => {
 		grid = [];
+		const radiusAndPaddingMultiplier =
+			params.targetRadius * 2 + params.gridPadding;
+		console.log(radiusAndPaddingMultiplier);
 		const midPointX = (params.gridX - 1) / 2;
 		// const midPointY = (params.gridY - 1) / 2;
 		for (let x = 0; x < params.gridX; x++) {
 			grid[x] = [];
 			for (let y = 0; y < params.gridY; y++) {
 				grid[x][y] = {
-					x: x - midPointX,
-					y: y - params.targetRadius,
+					x: (x - midPointX) * radiusAndPaddingMultiplier,
+					y: y * radiusAndPaddingMultiplier,
 					targetId: '',
 				};
 			}
@@ -279,20 +274,13 @@ const StartGame = (
 		elapsedTime =
 			clock.getElapsedTime() + gameInfoClone.lastRecordedElapsedTime;
 
-		if (elapsedTime === 0) clearBalls();
+		if (elapsedTime === 0) resetGame();
 
 		gameInfoClone.timeLeft = parseFloat(
 			(params.gameDuration - elapsedTime).toFixed(2)
 		);
 
-		// console.log(
-		// 	gameInfoClone.timeLeft,
-		// 	gameInfoClone.nextSpawn.toFixed(2),
-		// 	gameInfoClone.started,
-		// 	spawnInterval,
-		// 	gameInfoClone.targetsLeft,
-		// 	objects.length
-		// );
+		// console.log(gameInfoClone.timeLeft, objects.length);
 
 		//speedTest Game Mode
 		if (params.gameMode === 'speedTest') speedTestGame();
