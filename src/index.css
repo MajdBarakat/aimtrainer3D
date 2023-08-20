@@ -42,6 +42,14 @@
 	/* background: #d7d7d7; */
 }
 
+.text-xxl {
+	font-size: 9.5rem;
+}
+
+.line-height-low {
+	line-height: 0.7;
+}
+
 /* .rc-slider-handle:focus-visible,
 .rc-slider-handle:focus,
 .rc-slider-handle-click-focused:focus,
