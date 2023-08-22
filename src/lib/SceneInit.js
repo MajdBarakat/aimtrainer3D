@@ -18,8 +18,8 @@ export default class SceneInit {
 
 		//additional components.
 		this.clock = undefined;
-		this.stats = undefined;
-		this.gui = undefined;
+		// this.stats = undefined;
+		// this.gui = undefined;
 
 		//lighting is basically required.
 		this.ambientLight = undefined;
@@ -49,9 +49,9 @@ export default class SceneInit {
 		// document.body.appendChild(this.renderer.domElement);
 
 		this.clock = new THREE.Clock();
-		this.stats = Stats();
-		document.body.appendChild(this.stats.dom);
-		this.gui = new dat.GUI();
+		// this.stats = Stats();
+		// document.body.appendChild(this.stats.dom);
+		// this.gui = new dat.GUI();
 
 		// ambient light
 		this.ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -68,7 +68,7 @@ export default class SceneInit {
 
 	animate() {
 		this.render();
-		this.stats.update();
+		// this.stats.update();
 		this.animateCallback && this.animateCallback();
 		window.requestAnimationFrame(this.animate.bind(this));
 	}
