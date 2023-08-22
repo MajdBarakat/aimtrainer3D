@@ -89,6 +89,11 @@ const SettingsScreen = ({ onLeave }) => {
 		);
 	};
 
+	const calculateSize = (count) =>
+		count *
+		(fetchSetting('targetRadius').value * 2 +
+			fetchSetting('gridPadding').value / 2);
+
 	const renderSliderSetting = (params, setting, disabled) => {
 		if (setting.id === 'targetCount') {
 			const gridArea =
@@ -96,7 +101,22 @@ const SettingsScreen = ({ onLeave }) => {
 			const max = Math.floor(gridArea / 2);
 			params.max = max;
 			if (setting.value > max) handleChange('targetCount', max);
+		} else if (setting.id === 'gridX') {
+			const max = Math.floor(19 / calculateSize(1));
+			params.max = max;
+			if (calculateSize(setting.value) > 19) {
+				handleChange('gridX', max);
+				setting.value = max;
+			}
+		} else if (setting.id === 'gridY') {
+			const max = Math.floor(10 / calculateSize(1));
+			params.max = max;
+			if (calculateSize(setting.value) > 10) {
+				handleChange('gridY', max);
+				setting.value = max;
+			}
 		}
+
 		return (
 			<div className="flex flex-row" key={params.id}>
 				<div className="w-1/3">

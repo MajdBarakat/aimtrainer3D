@@ -213,7 +213,18 @@
 			"name": "GRID SHOT"
 		}
 	],
-	"difficultyLinkedSettings": ["spawnRate", "despawnRate", "spreadX"],
+	"difficultyLinkedSettings": [
+		"spawnRate",
+		"despawnRate",
+		"spreadX",
+		"spreadY",
+		"spreadZ",
+		"targetCount",
+		"gridPadding",
+		"gridX",
+		"gridY",
+		"gridOffsetZ"
+	],
 	"difficultyOptions": [
 		{
 			"id": "custom",
@@ -224,6 +235,7 @@
 			"id": "easy",
 			"name": "EASY",
 			"values": {
+				"targetRadius": 0.5,
 				"spawnRate": 0.5,
 				"despawnRate": 0.25,
 				"spreadX": 5,
@@ -240,6 +252,7 @@
 			"id": "normal",
 			"name": "NORMAL",
 			"values": {
+				"targetRadius": 0.5,
 				"spawnRate": 1,
 				"despawnRate": 0.5,
 				"spreadX": 10,
@@ -256,6 +269,7 @@
 			"id": "hard",
 			"name": "HARD",
 			"values": {
+				"targetRadius": 0.5,
 				"spawnRate": 1.5,
 				"despawnRate": 1,
 				"spreadX": 15,
@@ -272,6 +286,7 @@
 			"id": "impossible",
 			"name": "IMPOSSIBLE",
 			"values": {
+				"targetRadius": 0.5,
 				"spawnRate": 2,
 				"despawnRate": 1.5,
 				"spreadX": 15,
