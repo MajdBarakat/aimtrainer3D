@@ -20,6 +20,12 @@ const SettingsScreen = ({ onLeave }) => {
 		fetchedSettings[0] !== undefined
 			? setSettings(fetchedSettings)
 			: setDefaultValues();
+
+		const selfDestructHandler = (e) => {
+			if (e.key === 'Escape') onLeave();
+			document.removeEventListener('keydown', selfDestructHandler);
+		};
+		document.addEventListener('keydown', selfDestructHandler);
 	}, []);
 
 	const setDefaultValues = () => {
@@ -68,7 +74,7 @@ const SettingsScreen = ({ onLeave }) => {
 					active
 						? 'active text-white'
 						: 'text-transparent text-outline'
-				} `}
+				} mb-4`}
 				onClick={() => onClick(settingId, option.id)}
 				key={option.id}
 			>
@@ -148,19 +154,26 @@ const SettingsScreen = ({ onLeave }) => {
 	return (
 		<div className="flex flex-col justify-center items-center w-screen h-screen absolute bg-black/75">
 			<div className="w-5/6">
-				<h1 className="text-7xl -mt-24 font-light">SETTINGS</h1>
+				<h1 className="text-7xl absolute top-0 mt-10 font-light">
+					SETTINGS
+				</h1>
 			</div>
 			<div className=" flex flex-col text-4xl w-7/12 items-center">
-				<h2 className="text-6xl ">GAME MODE</h2>
+				<h2 className="text-5xl font-semibold mb-2">GAME MODE</h2>
 			</div>
 			<div className=" flex flex-row text-4xl font-semibold w-7/12 items-center justify-center gap-10">
 				{renderOptions(config.gameModeOptions, 'gameMode')}
 			</div>
 			<div className=" flex flex-col text-4xl w-7/12 items-center">
-				<h2 className="text-6xl ">DIFFICULTY</h2>
+				<h2 className="text-5xl font-semibold mb-2">DIFFICULTY</h2>
 			</div>
 			<div className=" flex flex-row text-4xl font-semibold w-7/12 items-center justify-center gap-10">
 				{renderOptions(config.difficultyOptions, 'difficulty')}
+			</div>
+			<div className=" flex flex-col text-4xl w-7/12 items-center">
+				<h2 className="text-5xl font-semibold mb-2">
+					ADVANCED OPTIONS
+				</h2>
 			</div>
 			<div className="flex flex-col text-4xl w-7/12">
 				{settings.map(
