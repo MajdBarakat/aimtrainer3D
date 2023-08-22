@@ -59,7 +59,9 @@ const App = () => {
 		//textures
 		const loadingManager = new THREE.LoadingManager();
 		const textureLoader = new THREE.TextureLoader(loadingManager);
-		const grid = textureLoader.load('src/assets/grid.png');
+		const grid = textureLoader.load(
+			'https://static.vecteezy.com/system/resources/previews/006/897/342/non_2x/gray-square-grid-seamless-pattern-gray-square-grid-on-a-gray-background-abstract-gray-textured-vector.jpg'
+		);
 		grid.minFilter = THREE.LinearFilter;
 
 		// loadingManager.onLoad = () => setLoaded(true);
