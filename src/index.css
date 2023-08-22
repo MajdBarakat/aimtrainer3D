@@ -52,6 +52,30 @@
 	-webkit-text-stroke-color: white;
 }
 
+.text-xxl {
+	font-size: 9.5rem;
+}
+
+.line-height-low {
+	line-height: 0.7;
+}
+
+.countdown {
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+.crosshair .horizontal {
+	width: 10px;
+	height: 2px;
+	background-color: black;
+}
+
+.crosshair .vertical {
+	width: 2px;
+	height: 10px;
+	background-color: black;
+}
+
 /* .rc-slider-handle:focus-visible,
 .rc-slider-handle:focus,
 .rc-slider-handle-click-focused:focus,

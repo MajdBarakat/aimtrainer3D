@@ -17,6 +17,7 @@ const App = () => {
 	const [gameInfo, setGameInfo] = useState();
 	const [time, setTime] = useState();
 	const [controls, setControls] = useState();
+	const [countdownTime, setCountdownTime] = useState(0);
 
 	useEffect(() => {
 		const init = new SceneInit('threejs');
@@ -46,8 +47,10 @@ const App = () => {
 					gameInfoClone.started = false;
 					gameInfoClone.lastRecordedElapsedTime +=
 						clock.getElapsedTime();
-					clock.stop();
-					setCurrentScreen('pause');
+					setTimeout(() => {
+						clock.stop();
+						setCurrentScreen('pause');
+					}, 0);
 				}
 				return gameInfoClone;
 			});
@@ -101,13 +104,24 @@ const App = () => {
 		return newGameInfo;
 	}
 
+	const resetScene = () => {
+		if (sceneInit) {
+			sceneInit.camera.lookAt(0, 0, 0);
+			if (sceneInit.scene.children.length > 2) {
+				sceneInit.scene.children = sceneInit.scene.children.filter(
+					(obj) => obj.name != 'target'
+				);
+			}
+		}
+	};
+
 	const countdown = () => {
 		return new Promise((resolve) => {
 			let seconds = 3;
-			setTime(`Starting in.. ${seconds}`);
+			setCountdownTime(seconds);
 			const timer = setInterval(() => {
 				seconds--;
-				setTime(`Starting in.. ${seconds}`);
+				setCountdownTime(seconds);
 				if (seconds === 0) {
 					clearInterval(timer);
 					resolve('resolved');
@@ -118,14 +132,19 @@ const App = () => {
 
 	const handleStart = async (isContinuing) => {
 		setCurrentScreen(null);
-		// await countdown();
+		controls.lock();
+		if (!isContinuing) {
+			setTime(0);
+			resetScene();
+		}
+		await countdown();
 		if (isContinuing) {
 			const gameInfoClone = cloneDeep(gameInfo);
 			gameInfo.started = true;
 			setGameInfo(gameInfoClone);
 			StartGame(
 				sceneInit,
-				gameInfo,
+				gameInfoClone,
 				setGameInfo,
 				setTime,
 				setCurrentScreen
@@ -143,7 +162,9 @@ const App = () => {
 	return (
 		<div>
 			{/* {loaded && <div>loading</div>} */}
-			{currentScreen === null && <HUD time={time}></HUD>}
+			{currentScreen === null && (
+				<HUD time={time} countdown={countdownTime}></HUD>
+			)}
 			{currentScreen === 'settings' && (
 				<SettingsScreen onLeave={() => setCurrentScreen('start')} />
 			)}
@@ -151,13 +172,14 @@ const App = () => {
 				<ScoreScreen
 					score={gameInfo.score}
 					onInit={() => controls.unlock()}
+					onLeave={() => setCurrentScreen('start')}
 				/>
 			)}
 			{currentScreen === 'start' && (
 				<StartScreen
-					sceneInit={sceneInit}
 					onStart={async () => await handleStart()}
 					onSettings={() => setCurrentScreen('settings')}
+					resetScene={resetScene}
 				/>
 			)}
 			{currentScreen === 'pause' && (
