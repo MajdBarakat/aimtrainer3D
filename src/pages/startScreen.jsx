@@ -1,16 +1,8 @@
-import { cloneDeep } from 'lodash';
 import { useEffect } from 'react';
 
-const StartScreen = ({ sceneInit, onStart, onSettings, onHelp }) => {
+const StartScreen = ({ onStart, onSettings, resetScene, onHelp }) => {
 	useEffect(() => {
-		if (sceneInit) {
-			sceneInit.camera.lookAt(0, 0, 0);
-			if (sceneInit.scene.children.length > 2) {
-				sceneInit.scene.children = sceneInit.scene.children.filter(
-					(obj) => obj.name != 'target'
-				);
-			}
-		}
+		resetScene();
 	}, []);
 
 	return (
@@ -31,11 +23,27 @@ const StartScreen = ({ sceneInit, onStart, onSettings, onHelp }) => {
 				>
 					SETTINGS
 				</button>
-				<button
+				{/* <button
 					className="bg-transparent p-0 font-semibold hover:opacity-75"
 					onClick={onHelp}
 				>
 					HELP
+				</button> */}
+				<button
+					className="bg-transparent p-0 font-semibold hover:opacity-75"
+					onClick={() =>
+						window.open('https://majdbarakat.dev/', '_blank')
+					}
+				>
+					PORTFOLIO
+				</button>
+				<button
+					className="bg-transparent p-0 font-semibold hover:opacity-75"
+					onClick={() =>
+						window.open('https://github.com/MajdBarakat', '_blank')
+					}
+				>
+					GITHUB
 				</button>
 			</div>
 		</div>

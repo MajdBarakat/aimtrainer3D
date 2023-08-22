@@ -188,17 +188,17 @@
 		}
 	},
 	"settingsDefaultValues": {
-		"gameMode": "speedTest",
+		"gameMode": "gridShot",
 		"difficulty": "normal",
 		"gameDuration": 30,
 		"targetRadius": 0.5,
-		"spawnRate": 2,
+		"spawnRate": 1.5,
 		"despawnRate": 0.5,
 		"spreadX": 10,
 		"spreadY": 10,
 		"spreadZ": 10,
 		"targetCount": 3,
-		"gridPadding": 0,
+		"gridPadding": 0.1,
 		"gridX": 3,
 		"gridY": 3,
 		"gridOffsetZ": 0.1

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import _, { random } from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 import config from '../config/config.json';
 
 const getValue = (name) => {
@@ -36,16 +36,12 @@ const StartGame = (
 	};
 
 	const params = initParams();
-	console.log(params);
 
 	const spawnInterval =
 		params.gameDuration /
 		Math.floor(params.gameDuration * params.spawnRate);
 
 	const { scene, camera, canvas, clock } = init;
-	const gameInfoClone = _.cloneDeep(gameInfo);
-
-	let { hits, misses, whiffs, accuracy } = gameInfoClone.score;
 
 	const updateObjects = () => {
 		objects = [];
@@ -54,7 +50,7 @@ const StartGame = (
 		});
 	};
 
-	gameInfoClone.started = true;
+	gameInfo.started = true;
 
 	const spawnBall = () => {
 		const object = new THREE.Mesh(
@@ -96,11 +92,11 @@ const StartGame = (
 		scene.add(object);
 		updateObjects();
 		setDespawnTime(object);
-		gameInfoClone.targetsLeft--;
+		gameInfo.targetsLeft--;
 	};
 
 	const setDespawnTime = (object) => {
-		const despawnTime = gameInfoClone.timeLeft - 1 / params.despawnRate;
+		const despawnTime = gameInfo.timeLeft - 1 / params.despawnRate;
 		const despawnObj = {
 			uuid: object.uuid,
 			despawnTime,
@@ -114,7 +110,7 @@ const StartGame = (
 		if (index > -1) {
 			scene.remove(scene.children[index]);
 			updateObjects();
-			misses++;
+			gameInfo.score.misses++;
 		}
 		despawnStack.shift();
 	};
@@ -129,51 +125,51 @@ const StartGame = (
 	};
 
 	const getScore = () => {
-		accuracy = (hits / (hits + whiffs + misses)) * 100;
-		gameInfoClone.score = {
-			hits,
-			misses,
-			whiffs,
-			accuracy,
-		};
-		setGameInfo(gameInfoClone);
+		gameInfo.score.accuracy = Math.floor(
+			(gameInfo.score.hits /
+				(gameInfo.score.hits +
+					gameInfo.score.whiffs +
+					gameInfo.score.misses)) *
+				100
+		);
+		setGameInfo(gameInfo);
 		setCurrentScreen('score');
 	};
 
 	const endGame = () => {
 		clock.stop();
 		resetGame();
-		gameInfoClone.started = false;
+		gameInfo.started = false;
 		getScore();
 	};
 
 	const speedTestGame = () => {
 		if (
 			clock.running &&
-			gameInfoClone.spawning &&
-			gameInfoClone.timeLeft < gameInfoClone.nextSpawn
+			gameInfo.spawning &&
+			gameInfo.timeLeft < gameInfo.nextSpawn
 		) {
 			spawnBall();
-			gameInfoClone.nextSpawn = parseFloat(
-				gameInfoClone.timeLeft - spawnInterval.toFixed(2)
+			gameInfo.nextSpawn = parseFloat(
+				gameInfo.timeLeft - spawnInterval.toFixed(2)
 			);
 		}
 
 		if (
 			despawnStack.length &&
-			gameInfoClone.timeLeft <= despawnStack[0].despawnTime
+			gameInfo.timeLeft <= despawnStack[0].despawnTime
 		)
 			despawnBall();
 
 		if (
-			accuracy === null &&
-			((gameInfoClone.targetsLeft === 0 && gameInfoClone.timeLeft <= 0) ||
-				gameInfoClone.timeLeft <= 0 - 1 / params.despawnRate)
+			gameInfo.score.accuracy === null &&
+			((gameInfo.targetsLeft === 0 && gameInfo.timeLeft <= 0) ||
+				gameInfo.timeLeft <= 0 - 1 / params.despawnRate)
 		)
 			endGame();
 
-		if (gameInfoClone.targetsLeft === 0 && gameInfoClone.started) {
-			gameInfoClone.spawning = false;
+		if (gameInfo.targetsLeft === 0 && gameInfo.started) {
+			gameInfo.spawning = false;
 		}
 	};
 
@@ -181,9 +177,7 @@ const StartGame = (
 		grid = [];
 		const radiusAndPaddingMultiplier =
 			params.targetRadius * 2 + params.gridPadding;
-		console.log(radiusAndPaddingMultiplier);
 		const midPointX = (params.gridX - 1) / 2;
-		// const midPointY = (params.gridY - 1) / 2;
 		for (let x = 0; x < params.gridX; x++) {
 			grid[x] = [];
 			for (let y = 0; y < params.gridY; y++) {
@@ -200,13 +194,14 @@ const StartGame = (
 		if (!grid) initGrid();
 
 		if (
-			parseFloat(gameInfoClone.timeLeft) > 0 &&
+			parseFloat(gameInfo.timeLeft) > 0 &&
 			objects.length < params.targetCount
 		)
 			// add custom value for how many balls allowed at a time
 			spawnBall();
 
-		if (accuracy === null && gameInfoClone.timeLeft <= 0) endGame();
+		if (gameInfo.score.accuracy === null && gameInfo.timeLeft <= 0)
+			endGame();
 	};
 
 	//raycaster
@@ -214,7 +209,7 @@ const StartGame = (
 
 	//shooting mechanic
 	canvas.addEventListener('click', (e) => {
-		if (gameInfoClone.started && currentIntersect) {
+		if (gameInfo.started && currentIntersect) {
 			scene.remove(currentIntersect.object);
 			if (params.gameMode === 'gridShot') {
 				for (let x = 0; x < grid.length; x++) {
@@ -230,15 +225,16 @@ const StartGame = (
 				}
 			}
 			updateObjects();
-			hits++;
-		} else if (gameInfoClone.started && !currentIntersect) whiffs++;
+			gameInfo.score.hits++;
+		} else if (gameInfo.started && !currentIntersect)
+			gameInfo.score.whiffs++;
 	});
 
-	gameInfoClone.targetsLeft =
-		gameInfoClone.targetsLeft ||
+	gameInfo.targetsLeft =
+		gameInfo.targetsLeft ||
 		Math.floor(params.gameDuration * params.spawnRate);
 
-	gameInfoClone.nextSpawn = gameInfoClone.nextSpawn || params.gameDuration;
+	gameInfo.nextSpawn = gameInfo.nextSpawn || params.gameDuration;
 
 	const objectDetection = () => {
 		const cameraDirection = new THREE.Vector3();
@@ -267,20 +263,13 @@ const StartGame = (
 
 	//game
 	const tick = () => {
-		// updateObjects();
+		elapsedTime = clock.getElapsedTime() + gameInfo.lastRecordedElapsedTime;
 
-		//set up game modes here
+		if (elapsedTime === 0) updateObjects();
 
-		elapsedTime =
-			clock.getElapsedTime() + gameInfoClone.lastRecordedElapsedTime;
-
-		if (elapsedTime === 0) resetGame();
-
-		gameInfoClone.timeLeft = parseFloat(
+		gameInfo.timeLeft = parseFloat(
 			(params.gameDuration - elapsedTime).toFixed(2)
 		);
-
-		// console.log(gameInfoClone.timeLeft, objects.length);
 
 		//speedTest Game Mode
 		if (params.gameMode === 'speedTest') speedTestGame();
@@ -295,12 +284,11 @@ const StartGame = (
 		intersects.forEach((obj) => obj.object.material.color.set(0x00ff00));
 
 		//update data
-		setTime(
-			gameInfoClone.timeLeft > 0 ? parseFloat(gameInfoClone.timeLeft) : 0
-		);
+		setTime(gameInfo.timeLeft > 0 ? parseFloat(gameInfo.timeLeft) : 0);
+
 		// Call tick again on the next frame
 		if (clock.running) {
-			setGameInfo(gameInfoClone);
+			setGameInfo(gameInfo);
 			window.requestAnimationFrame(tick);
 		}
 	};
